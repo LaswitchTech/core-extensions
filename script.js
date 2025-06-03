@@ -322,6 +322,8 @@ const ExtensionsFeed = function(container, extensions){
         }).appendTo(row.meta.header.author);
         row.meta.header.author.name = $(document.createElement('span')).attr('data-key','author').text(extension.author).appendTo(row.meta.header.author);
         row.meta.paragraph = $(document.createElement('p')).attr('data-key','description').text(extension.description).appendTo(row.meta);
+
+        // Links
         row.meta.links = $(document.createElement('div')).addClass('d-flex flex-row').appendTo(row.meta);
         if(typeof extension.repository !== 'undefined' && extension.repository !== null && extension.repository !== '') {
             row.meta.links.repo = $(document.createElement('a')).attr({
