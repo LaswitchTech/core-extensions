@@ -21,42 +21,37 @@
             },
             function(tabs,component){
 
-                // Loop through the types
-                for(const [key, type] of Object.entries(['modules', 'plugins', 'themes'])){
-                // for(const [key, type] of Object.entries(['plugins'])){
+                // AJAX Request
+                $.ajax({
+                    url: '/endpoint.php/extensions/fetchAll',
+                    type: 'GET',dataType: 'json',
+                    error: function(xhr, status, error) {
+                        let color = 'info', icon = 'question-circle', title = builder.Locale.get(xhr.statusText), content = builder.Locale.get(xhr.responseText);
+                        switch(xhr.status){
+                            case 403: color = 'danger'; icon = 'person'; break;
+                            case 404: color = 'warning'; icon = 'question-diamond'; break;
+                            case 500: color = 'danger'; icon = 'bug'; break;
+                        }
+                        builder.Component("alert",tab,{icon:icon,color:color,title:title},function(alert,component){component.content.html('<pre class="m-0 p-2">'+content+'</pre>');});
+                    },
+                    success: function(response) {
 
-                    // Add a tab for each type
-                    tabs.add(
-                        key,
-                        {label: builder.Locale.get(type.charAt(0).toUpperCase() + type.slice(1))},
-                        function(tab, nav){
-                            console.log(type, tab, nav)
+                        // Loop through the types
+                        for(const [type, extensions] of Object.entries(response)){
 
-                            // Styling
-                            // tab.addClass('d-flex');
-
-                            // AJAX Request
-                            $.ajax({
-                                url: '/endpoint.php/extensions/fetchAll?type=' + type,
-                                type: 'GET',dataType: 'json',
-                                error: function(xhr, status, error) {
-                                    let color = 'info', icon = 'question-circle', title = builder.Locale.get(xhr.statusText), content = builder.Locale.get(xhr.responseText);
-                                    switch(xhr.status){
-                                        case 403: color = 'danger'; icon = 'person'; break;
-                                        case 404: color = 'warning'; icon = 'question-diamond'; break;
-                                        case 500: color = 'danger'; icon = 'bug'; break;
-                                    }
-                                    builder.Component("alert",tab,{icon:icon,color:color,title:title},function(alert,component){component.content.html('<pre class="m-0 p-2">'+content+'</pre>');});
-                                },
-                                success: function(response) {
+                            // Add a tab for each type
+                            tabs.add(
+                                type,
+                                {label: builder.Locale.get(type.charAt(0).toUpperCase() + type.slice(1))},
+                                function(tab, nav){
 
                                     // Generate the feed
-                                    ExtensionsFeed(tab, response);
-                                }
-                            });
-                        },
-                    );
-                }
+                                    ExtensionsFeed(tab, extensions);
+                                },
+                            );
+                        }
+                    }
+                });
             },
         );
     });
