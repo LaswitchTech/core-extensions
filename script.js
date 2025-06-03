@@ -164,7 +164,7 @@ const ExtensionsFeed = function(container, extensions){
             "title": extension.name,
             "class": 'rounded-circle',
             "style": "width: 122px; height: 122px;",
-            "src": extension.picture || '/assets/images/placeholder.png',
+            "src": extension.picture || '/plugins/extensions/placeholder.png',
         }).appendTo(row.picture);
 
         // Meta
