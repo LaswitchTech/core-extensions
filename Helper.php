@@ -661,6 +661,14 @@ class ExtensionsHelper extends Helper {
         return file_put_contents($path, $json) !== false;
     }
 
+    /**
+     * Install an extension.
+     *
+     * @param string $type  The type of extension (e.g., 'modules', 'plugins', 'themes').
+     * @param string $base  The base name of the extension to install.
+     * @return bool         True if the extension was installed successfully, false otherwise.
+     * @throws RuntimeException If the download or unpacking fails.
+     */
     public function install(string $type, string $base): bool
     {
         // Retrieve the extension info
@@ -687,6 +695,13 @@ class ExtensionsHelper extends Helper {
         return false;
     }
 
+    /**
+     * Uninstall an extension.
+     *
+     * @param string $type  The type of extension (e.g., 'modules', 'plugins', 'themes').
+     * @param string $base  The base name of the extension to uninstall.
+     * @return bool         True if the extension was uninstalled successfully, false otherwise.
+     */
     public function uninstall(string $type, string $base): bool
     {
         // Retrieve the extension info
