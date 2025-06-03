@@ -409,6 +409,73 @@ const ExtensionsModalUninstall = function(extension){
         }
     );
 }
+const ExtensionsModalUpdate = function(extension){
+    builder.Component(
+        "modal",
+        null,
+        {
+            onEnter: false,
+            destroy: true,
+            icon: "arrow-clockwise",
+            title: builder.Locale.get("Update Extension"),
+            body: builder.Locale.get("This will update the extension to the latest version available on the extensions feed. This will allow you to use the latest features and fixes."),
+            cancel: false,
+            submit: true,
+            callback: {
+                submit: function(element,modal){
+
+                    // Create a spinner animate-rotate
+                    var spinner = $(document.createElement('div')).attr({
+                        "class": "animate-rotate rounded-circle border border-secondary border-4 d-none",
+                        "style": "width: 96px; height: 96px; border-top-color: var(--bs-primary)!important;",
+                    }).appendTo(element);
+
+                    // Hide the dialog
+                    element.dialog.addClass('opacity-0');
+
+                    // Setup a spinner while waiting for the modal to be submitted
+                    setTimeout(() => {
+
+                        // Hide the dialog
+                        element.dialog.hide();
+
+                        // Add flex to the modal
+                        element.addClass('d-flex align-items-center justify-content-center');
+
+                        // Show the spinner
+                        spinner.removeClass('d-none');
+
+                        // AJAX Request
+                        $.ajax({
+                            url: '/endpoint.php/extensions/update?type='+extension.type+'&base='+extension.base,
+                            type: 'GET',dataType: 'json',
+                            success: function(response){
+
+                                // Close the modal
+                                modal.hide();
+                            }
+                        });
+                    }, 300);
+                },
+            },
+        },
+        function(modal,component){
+
+            // Save the component
+            const componentModal = component;
+
+            // Styling
+            component.header.addClass('text-bg-warning');
+            component.footer.submit.addClass('btn-warning').removeClass('btn-link').attr({
+                "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
+            }).text(builder.Locale.get('Update Extension'));
+            component.footer.submit.icon = $(document.createElement('i')).addClass('bi bi-arrow-clockwise me-1').prependTo(component.footer.submit);
+
+            // Open the modal
+            modal.show();
+        }
+    );
+}
 const ExtensionsFeed = function(container, extensions){
 
     // Retrieve the first key of the extensions
@@ -513,6 +580,9 @@ const ExtensionsFeed = function(container, extensions){
                     "class": "btn btn-warning",
                 }).text(builder.Locale.get('Update')).appendTo(row.controls);
                 row.controls.update.icon = $(document.createElement('i')).addClass('bi bi-arrow-clockwise me-1').prependTo(row.controls.update);
+                row.controls.update.click(function(){
+                    ExtensionsModalUpdate(extension);
+                });
             }
             if(extension.initialized){
                 if(!extension.published) {

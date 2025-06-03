@@ -713,10 +713,4 @@ class ExtensionsHelper extends Helper {
         // Return
         return $this->delete($installPath);
     }
-
-    public function update(string $type, string $base): bool
-    {
-        // Retrieve the extension info
-        $extension = $this->get($type, $base);
-    }
 }

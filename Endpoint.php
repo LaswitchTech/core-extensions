@@ -38,6 +38,7 @@ class ExtensionsEndpoint extends Endpoint {
             case "/extensions/meta":
             case "/extensions/publish":
             case "/extensions/unpublish":
+            case "/extensions/update":
                 $this->Level = 3;
                 break;
             case "/extensions/uninstall":
@@ -271,6 +272,43 @@ class ExtensionsEndpoint extends Endpoint {
 
                     // Update the meta information
                     $message["data"]["status"] = $this->Helper->Extensions->uninstall($type, $base);
+                } else {
+
+                    // Set the error message
+                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Type and base parameters are required."];
+                }
+            }
+        }
+
+        // Return the message
+        return $message;
+    }
+
+    /**
+     * Update an extension
+     */
+    public function updateAction()
+    {
+        // Set the default message
+        $message = ["status" => 200, "message" => "OK", "data" => []];
+
+        // Check if the status is still OK
+        if($message['status'] == 200){
+
+            // Check the request method
+            if($this->Request->getMethod() == "GET"){
+
+                // Retrieve the type of extensions to update
+                $type = $this->Request->getParams('GET', 'type') ?? null;
+
+                // Retrieve the base of the extensions to update
+                $base = $this->Request->getParams('GET', 'base') ?? null;
+
+                // Check if the type is set
+                if($type && $base){
+
+                    // Update the meta information
+                    $message["data"]["status"] = $this->Helper->Extensions->install($type, $base);
                 } else {
 
                     // Set the error message
