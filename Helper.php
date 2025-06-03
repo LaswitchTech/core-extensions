@@ -244,6 +244,8 @@ class ExtensionsHelper extends Helper {
     /**
      * Get the listing/details of extensions.
      *
+     * @param string      $type  The type of extensions to fetch (e.g., 'modules', 'plugins', 'themes').
+     * @param string|null $base  The base name of the extension to fetch (optional).
      * @return array
      */
     public function get(string $type, ?string $base = null): array

@@ -4,12 +4,6 @@
   @license    MIT (https://mit-license.org/)
   @author     Full Name <user@domain.com>
 -->
-Extension Manager
-
-- Manage Listings
-- Manage a List (submit)
-
-
 <div class="col-12" id="layout"></div>
 <script>
     $(document).ready(function(){
@@ -28,8 +22,8 @@ Extension Manager
             function(tabs,component){
 
                 // Loop through the types
-                // for(const [key, type] of Object.entries(['modules', 'plugins', 'themes'])){
-                for(const [key, type] of Object.entries(['plugins'])){
+                for(const [key, type] of Object.entries(['modules', 'plugins', 'themes'])){
+                // for(const [key, type] of Object.entries(['plugins'])){
 
                     // Add a tab for each type
                     tabs.add(
