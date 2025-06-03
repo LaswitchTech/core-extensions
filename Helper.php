@@ -259,34 +259,23 @@ class ExtensionsHelper extends Helper {
      */
     protected function delete(string $directory): bool
     {
-        // Set the log channel to 'backup'
-        $this->Log->set('backup');
-
         // If it doesn't exist, treat it as an error or success depending on your preference
         if (!file_exists($directory)) {
             // Option 1: Treat as an error
-            $this->Log->error("Directory does not exist: $directory");
             return false;
-
-            // Option 2: Treat as success since there's nothing to delete
-            // $this->Log->info("Directory does not exist, nothing to delete: $directory");
-            // return true;
         }
 
         // If it's a file or symlink, just unlink it
         if (!is_dir($directory)) {
             if (!@unlink($directory)) {
-                $this->Log->error("Failed to delete file or symlink: $directory");
                 return false;
             }
-            $this->Log->success("Deleted file or symlink: $directory");
             return true;
         }
 
         // Otherwise, recursively remove contents
         $items = scandir($directory);
         if ($items === false) {
-            $this->Log->error("Failed to scan directory: $directory");
             return false;
         }
 
@@ -307,11 +296,9 @@ class ExtensionsHelper extends Helper {
 
         // Finally, remove the now-empty directory
         if (!@rmdir($directory)) {
-            $this->Log->error("Failed to delete directory (it might not be empty or permission denied): $directory");
             return false;
         }
 
-        $this->Log->success("Deleted directory: $directory");
         return true;
     }
 
