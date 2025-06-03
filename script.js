@@ -73,7 +73,7 @@ const ExtensionsModalDev = function(extension, row){
 
                             // AJAX Request
                             $.ajax({
-                                url: '/endpoint.php/extensions/updateMeta?type='+extension.type+'&base='+extension.base,
+                                url: '/endpoint.php/extensions/meta?type='+extension.type+'&base='+extension.base,
                                 headers: {'X-CSRF-Authorization': CSRF_KEY},
                                 type: 'POST',dataType: 'json',
                                 data: {meta: form.val()},
