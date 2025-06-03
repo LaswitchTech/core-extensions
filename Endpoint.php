@@ -29,6 +29,9 @@ class ExtensionsEndpoint extends Endpoint {
 
         // Set Properties
         switch($namespace){
+            case "/extensions/updateMeta":
+                $this->Level = 3;
+                break;
             case "/extensions/fetchAll":
                 $this->Level = 1;
                 break;
@@ -65,6 +68,53 @@ class ExtensionsEndpoint extends Endpoint {
                         "plugins" => $this->Helper->Extensions->get('plugins'),
                         "themes" => $this->Helper->Extensions->get('themes'),
                     ];
+                }
+            }
+        }
+
+        // Return the message
+        return $message;
+    }
+
+    /**
+     * Update the meta information
+     */
+    public function updateMetaAction()
+    {
+        // Import Global Variables
+        global $CSRF;
+
+        // Set the default message
+        $message = ["status" => 200, "message" => "OK", "data" => []];
+
+        // Check the request method
+        if($this->Request->getMethod() == "POST"){
+            $message["data"]["CSRF"] = [
+                "token" => $CSRF->token(),
+                "key" => $CSRF->key()
+            ];
+        }
+
+        // Check if the status is still OK
+        if($message['status'] == 200){
+
+            // Check the request method
+            if($this->Request->getMethod() == "POST"){
+
+                // Retrieve the type of extensions to update
+                $type = $this->Request->getParams('GET', 'type') ?? null;
+
+                // Retrieve the base of the extensions to update
+                $base = $this->Request->getParams('GET', 'base') ?? null;
+
+                // Check if the type is set
+                if($type && $base){
+
+                    // Retrieve the meta information from the request
+                    $meta = $this->Request->getParams('POST', 'meta') ?? null;
+
+                    // Update the meta information
+                    $this->Helper->Extensions->meta($type, $base, $meta);
                 }
             }
         }

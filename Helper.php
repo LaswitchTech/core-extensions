@@ -271,4 +271,57 @@ class ExtensionsHelper extends Helper {
         // Return the extension
         return $this->extensions[$type][$base];
     }
+
+    /**
+     * Get the listing of all extensions.
+     *
+     * @param string|null $type  The type of extensions to fetch (e.g., 'modules', 'plugins', 'themes').
+     * @param string|null $base  The base name of the extension to fetch (optional).
+     * @param array       $meta  Additional metadata to include in the info file.
+     * @return array
+     */
+    public function meta(string $type, string $base, array $meta): bool
+    {
+        // Set Default info;
+        $info = [
+            "name" => ucwords(str_replace('-', ' ', $base)),
+            "type" => $type,
+            "base" => $base,
+            "author" => null,
+            "email" => null,
+            "date" => date('Y-m-d'),
+            "version" => "v0.0.0",
+            "tags" => null,
+            "description" => "An extension for the Core Framework.",
+            "repository" => null,
+            "download" => null,
+            "tracker" => null,
+            "support" => null,
+            "picture" => null,
+        ];
+
+        // Replace the info with the data provided
+        foreach($this->get($type, $base) as $key => $value) {
+            if(array_key_exists($key, $info)) {
+                $info[$key] = $value;
+            }
+        }
+
+        // Replace the info with the data provided
+        foreach($meta as $key => $value) {
+            if(array_key_exists($key, $info)) {
+                $info[$key] = $value;
+            }
+        }
+
+        // Convert the info to JSON
+        $json = json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        // Set the paths
+        $infoPath = $this->Config->root() . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . 'info.cfg';
+        $gitPath = $this->Config->root() . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . '.git';
+
+        // Return true if the file was written successfully, false otherwise
+        return is_dir($gitPath) ? file_put_contents($infoPath, $json) !== false : false;
+    }
 }

@@ -70,17 +70,32 @@ const ExtensionsModalDev = function(extension, row){
                     },
                     callback:{
                         submit: function(form){
-                            console.log(form.val());
-                            // $.ajax({
-                            //     url: '/endpoint.php/vcards/update?id='+vcard.id,
-                            //     type: 'POST',dataType: 'json',
-                            //     data: form.val(),
-                            //     success: function(response) {
-                            //         CSRF_KEY = response.CSRF.key;
-                            //         CSRF_TOKEN = response.CSRF.token;
-                            //         modal.hide();
-                            //     }
-                            // });
+
+                            // AJAX Request
+                            $.ajax({
+                                url: '/endpoint.php/extensions/updateMeta?type='+extension.type+'&base='+extension.base,
+                                headers: {'X-CSRF-Authorization': CSRF_KEY},
+                                type: 'POST',dataType: 'json',
+                                data: {meta: form.val()},
+                                success: function(response){
+
+                                    // Update CSRF
+                                    CSRF_KEY = response.CSRF.key;
+                                    CSRF_TOKEN = response.CSRF.token;
+
+                                    // Loop through the tables
+                                    for(const [key, value] of Object.entries(form.val())){
+                                        switch(key){
+                                            default:
+                                                row.find('[data-key="'+key+'"]').text(value);
+                                                break;
+                                        }
+                                    }
+
+                                    // Close the modal
+                                    modal.hide();
+                                }
+                            });
                         },
                     },
                 },
@@ -155,7 +170,7 @@ const ExtensionsFeed = function(container, extensions){
         // Meta
         row.meta = $(document.createElement('div')).addClass('flex-grow-1 ps-3').appendTo(row);
         row.meta.header = $(document.createElement('h4')).appendTo(row.meta);
-        row.meta.header.name = $(document.createElement('strong')).text(extension.name).appendTo(row.meta.header);
+        row.meta.header.name = $(document.createElement('strong')).attr('data-key','name').text(extension.name).appendTo(row.meta.header);
         row.meta.header.by = $(document.createElement('span')).addClass('mx-2').text(builder.Locale.get('by')).appendTo(row.meta.header);
         row.meta.header.author = $(document.createElement('a')).attr({
             "class": "d-flex-inline align-items-center",
@@ -168,9 +183,8 @@ const ExtensionsFeed = function(container, extensions){
             "style": "width: 32px; height: 32px;",
             "src": '/avatar?username='+extension.email,
         }).appendTo(row.meta.header.author);
-        row.meta.header.author.name = $(document.createElement('span')).attr({
-        }).text(extension.author).appendTo(row.meta.header.author);
-        row.meta.paragraph = $(document.createElement('p')).text(extension.description).appendTo(row.meta);
+        row.meta.header.author.name = $(document.createElement('span')).attr('data-key','author').text(extension.author).appendTo(row.meta.header.author);
+        row.meta.paragraph = $(document.createElement('p')).attr('data-key','description').text(extension.description).appendTo(row.meta);
         row.meta.links = $(document.createElement('div')).addClass('d-flex flex-row').appendTo(row.meta);
         if(typeof extension.repository !== 'undefined' && extension.repository !== null && extension.repository !== '') {
             row.meta.links.repo = $(document.createElement('a')).attr({
@@ -197,18 +211,26 @@ const ExtensionsFeed = function(container, extensions){
             row.meta.links.support.icon = $(document.createElement('i')).addClass('bi bi-heart-fill me-1').css('color','var(--bs-pink)').prependTo(row.meta.links.support);
         }
 
-        // Initialization Alert
+        // Manual Install Alert
         if(!extension.initialized && !extension.published){
             row.meta.initialize = $(document.createElement('div')).attr({
+                "class": "alert alert-warning mt-3 p-2 px-3",
+            }).text(builder.Locale.get('This extension was manually installed.')).appendTo(row.meta);
+            row.meta.initialize.icon = $(document.createElement('i')).addClass('bi bi-exclamation-triangle-fill me-1').css('color','var(--bs-warning)').prependTo(row.meta.initialize);
+        }
+
+        // Git Install Alert
+        if(extension.initialized && !extension.published){
+            row.meta.initialize = $(document.createElement('div')).attr({
                 "class": "alert alert-danger mt-3 p-2 px-3",
-            }).text(builder.Locale.get('Git has not been initialized')).appendTo(row.meta);
+            }).text(builder.Locale.get('This extension was installed using Git.')).appendTo(row.meta);
             row.meta.initialize.icon = $(document.createElement('i')).addClass('bi bi-exclamation-triangle-fill me-1').css('color','var(--bs-danger)').prependTo(row.meta.initialize);
         }
 
         // Version
         row.version = $(document.createElement('div')).addClass('flex-shrink-0 px-3').appendTo(row);
         row.version.header = $(document.createElement('h5')).addClass('m-0').appendTo(row.version);
-        row.version.badge = $(document.createElement('span')).addClass('badge text-bg-blue').text(extension.version).appendTo(row.version.header);
+        row.version.badge = $(document.createElement('span')).addClass('badge text-bg-blue').attr('data-key','version').text(extension.version).appendTo(row.version.header);
 
         // Controls
         row.controls = $(document.createElement('div')).addClass('flex-shrink-0 btn-group-vertical').appendTo(row);
