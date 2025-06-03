@@ -229,7 +229,7 @@ class ExtensionsHelper extends Helper {
 
                     // Set the extension switches
                     $this->extensions[$type][$base]['published'] = $published;
-                    $this->extensions[$type][$base]['initialized'] = is_dir($gitPath) && file_exists($infoPath);
+                    $this->extensions[$type][$base]['initialized'] = is_dir($gitPath);
                     $this->extensions[$type][$base]['installed'] = true;
                 }
             }
