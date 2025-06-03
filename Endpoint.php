@@ -116,7 +116,85 @@ class ExtensionsEndpoint extends Endpoint {
                     $meta = $this->Request->getParams('POST', 'meta') ?? null;
 
                     // Update the meta information
-                    $this->Helper->Extensions->meta($type, $base, $meta);
+                    $message["data"]["status"] = $this->Helper->Extensions->meta($type, $base, $meta);
+                } else {
+
+                    // Set the error message
+                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Type and base parameters are required."];
+                }
+            }
+        }
+
+        // Return the message
+        return $message;
+    }
+
+    /**
+     * Publish an extension
+     */
+    public function publishAction()
+    {
+        // Set the default message
+        $message = ["status" => 200, "message" => "OK", "data" => []];
+
+        // Check if the status is still OK
+        if($message['status'] == 200){
+
+            // Check the request method
+            if($this->Request->getMethod() == "GET"){
+
+                // Retrieve the type of extensions to update
+                $type = $this->Request->getParams('GET', 'type') ?? null;
+
+                // Retrieve the base of the extensions to update
+                $base = $this->Request->getParams('GET', 'base') ?? null;
+
+                // Check if the type is set
+                if($type && $base){
+
+                    // Update the meta information
+                    $message["data"]["status"] = $this->Helper->Extensions->publish($type, $base);
+                } else {
+
+                    // Set the error message
+                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Type and base parameters are required."];
+                }
+            }
+        }
+
+        // Return the message
+        return $message;
+    }
+
+    /**
+     * Unpublish an extension
+     */
+    public function unpublishAction()
+    {
+        // Set the default message
+        $message = ["status" => 200, "message" => "OK", "data" => []];
+
+        // Check if the status is still OK
+        if($message['status'] == 200){
+
+            // Check the request method
+            if($this->Request->getMethod() == "GET"){
+
+                // Retrieve the type of extensions to update
+                $type = $this->Request->getParams('GET', 'type') ?? null;
+
+                // Retrieve the base of the extensions to update
+                $base = $this->Request->getParams('GET', 'base') ?? null;
+
+                // Check if the type is set
+                if($type && $base){
+
+                    // Update the meta information
+                    $message["data"]["status"] = $this->Helper->Extensions->unpublish($type, $base);
+                } else {
+
+                    // Set the error message
+                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Type and base parameters are required."];
                 }
             }
         }
