@@ -347,4 +347,161 @@ class ExtensionsHelper extends Helper {
         // Return true if the file was written successfully, false otherwise
         return is_dir($gitPath) ? file_put_contents($infoPath, $json) !== false : false;
     }
+
+    /**
+     * Publish an extension to the repository.
+     *
+     * @param string $type  The type of extension (e.g., 'modules', 'plugins', 'themes').
+     * @param string $base  The base name of the extension to publish.
+     * @return bool         True if the extension was published successfully, false otherwise.
+     * @throws RuntimeException If the repository is not set or if the extension is already published.
+     */
+    public function publish(string $type, string $base): bool
+    {
+        // Retrieve the extension info
+        $extension = $this->get($type, $base);
+
+        // Initialize variables
+        $owner = null;
+        $repo  = null;
+        $url   = null;
+        $token = null;
+
+        // Check if the repository is set
+        if(!isset($extension['repository']) || empty($extension['repository'])) {
+            throw new RuntimeException("The repository for the extension {$base} is not set.");
+        }
+
+        // Check if the extension is already published
+        if($extension['published']) {
+            throw new RuntimeException("The extension {$base} is already published.");
+        }
+
+        // Check if the repository is from GitHub
+        if(preg_match('#^https?://github\.com/#', $extension['repository'])) {
+
+            // Extract the repository owner and name
+            if(preg_match('#^https?://github\.com/([^/]+)/([^/]+)(?:\.git)?$#', $extension['repository'], $matches)) {
+                $owner = $matches[1];
+                $repo  = $matches[2];
+                $url   = "https://api.github.com/repos/{$owner}/{$repo}/contents/info.cfg?ref={$extension['branch']}";
+                $token = $extension['token'];
+            } else {
+                throw new RuntimeException("The repository URL {$extension['repository']} is not a valid GitHub repository.");
+            }
+        }
+
+        // Check if the repository is from GitLab
+        elseif(preg_match('#^https?://gitlab\.com/#', $extension['repository'])) {
+
+            // Extract the repository owner and name
+            if(preg_match('#^https?://gitlab\.com/([^/]+)/([^/]+)(?:\.git)?$#', $extension['repository'], $matches)) {
+                $owner = $matches[1];
+                $repo  = $matches[2];
+                $url   = "https://gitlab.com/api/v4/projects/{$owner}%2F{$repo}/repository/files/info.cfg/raw?ref={$extension['branch']}";
+                $token = $extension['token'];
+            } else {
+                throw new RuntimeException("The repository URL {$extension['repository']} is not a valid GitLab repository.");
+            }
+        }
+
+        // Check if the repository is from Bitbucket
+        elseif(preg_match('#^https?://bitbucket\.org/#', $extension['repository'])) {
+
+            // Extract the repository owner and name
+            if(preg_match('#^https?://bitbucket\.org/([^/]+)/([^/]+)(?:\.git)?$#', $extension['repository'], $matches)) {
+                $owner = $matches[1];
+                $repo  = $matches[2];
+                $url   = "https://api.bitbucket.org/2.0/repositories/{$owner}/{$repo}/src/{$extension['branch']}/info.cfg";
+                $token = $extension['token'];
+            } else {
+                throw new RuntimeException("The repository URL {$extension['repository']} is not a valid Bitbucket repository.");
+            }
+        }
+
+        // Check if the URL is set
+        if($url){
+
+            // Set in the listing
+            $this->listing[$type][$base] = ['url'    => $url];
+
+            // Set the token if available
+            if($token) {
+                $this->listing[$type][$base]['token'] = $token;
+            }
+
+            // Sort the listing by name
+            ksort($this->listing[$type]);
+
+            // Set the paths
+            $path = $this->pluginDir . '/listing.cfg';
+
+            // Convert the info to JSON
+            $json = json_encode($this->listing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            // Return true if the file was written successfully, false otherwise
+            return file_put_contents($path, $json) !== false;
+        }
+
+        // Return false
+        return false;
+    }
+
+    /**
+     * Unpublish an extension from the repository.
+     *
+     * @param string $type  The type of extension (e.g., 'modules', 'plugins', 'themes').
+     * @param string $base  The base name of the extension to unpublish.
+     * @return bool         True if the extension was unpublished successfully, false otherwise.
+     */
+    public function unpublish(string $type, string $base): bool
+    {
+        // Check if the listing is loaded
+        if(empty($this->listing)) {
+            $this->load();
+        }
+
+        // Check if the type exists
+        if(!array_key_exists($type, $this->listing)) {
+            return false;
+        }
+
+        // Check if the base exists
+        if(!array_key_exists($base, $this->listing[$type])) {
+            return false;
+        }
+
+        // Remove the extension from the listing
+        unset($this->listing[$type][$base]);
+
+        // Sort the listing by name
+        ksort($this->listing[$type]);
+
+        // Set the paths
+        $path = $this->pluginDir . '/listing.cfg';
+
+        // Convert the info to JSON
+        $json = json_encode($this->listing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        // Return true if the file was written successfully, false otherwise
+        return file_put_contents($path, $json) !== false;
+    }
+
+    public function install(string $type, string $base): bool
+    {
+        // Retrieve the extension info
+        $extension = $this->get($type, $base);
+    }
+
+    public function uninstall(string $type, string $base): bool
+    {
+        // Retrieve the extension info
+        $extension = $this->get($type, $base);
+    }
+
+    public function update(string $type, string $base): bool
+    {
+        // Retrieve the extension info
+        $extension = $this->get($type, $base);
+    }
 }
