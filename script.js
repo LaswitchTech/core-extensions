@@ -385,7 +385,18 @@ const ExtensionsFeed = function(container, extensions){
                     row.controls.publish = $(document.createElement('button')).attr({
                         "class": "btn btn-blue",
                     }).text(builder.Locale.get('Publish')).appendTo(row.controls);
-                    extension.published.icon = $(document.createElement('i')).addClass('bi bi-check-lg me-1').prependTo(row.controls.publish);
+                    row.controls.publish.icon = $(document.createElement('i')).addClass('bi bi-check-lg me-1').prependTo(row.controls.publish);
+                    row.controls.publish.click(function(){
+                        ExtensionsModalPublish(extension);
+                    });
+                } else {
+                    row.controls.unpublish = $(document.createElement('button')).attr({
+                        "class": "btn btn-danger",
+                    }).text(builder.Locale.get('Unpublish')).appendTo(row.controls);
+                    row.controls.unpublish.icon = $(document.createElement('i')).addClass('bi bi-x-lg me-1').prependTo(row.controls.unpublish);
+                    row.controls.unpublish.click(function(){
+                        ExtensionsModalUnpublish(extension);
+                    });
                 }
                 row.controls.dev = $(document.createElement('button')).attr({
                     "class": "btn btn-indigo",
