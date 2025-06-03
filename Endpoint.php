@@ -29,7 +29,9 @@ class ExtensionsEndpoint extends Endpoint {
 
         // Set Properties
         switch($namespace){
-            case "/extensions/updateMeta":
+            case "/extensions/meta":
+            case "/extensions/publish":
+            case "/extensions/unpublish":
                 $this->Level = 3;
                 break;
             case "/extensions/fetchAll":
@@ -79,7 +81,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Update the meta information
      */
-    public function updateMetaAction()
+    public function metaAction()
     {
         // Import Global Variables
         global $CSRF;
