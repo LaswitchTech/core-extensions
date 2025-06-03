@@ -175,7 +175,7 @@ class ExtensionsHelper extends Helper {
                 foreach($extensions as $base){
 
                     // Set some switches
-                    $published = false;
+                    $published = array_key_exists($base, $this->extensions[$type]);
                     $initialized = true;
 
                     // Set the info path
@@ -215,10 +215,6 @@ class ExtensionsHelper extends Helper {
 
                         // Load the extension from the filesystem
                         $this->extensions[$type][$base] = $info;
-                    } else {
-
-                        // Set the extension as published
-                        $published = true;
                     }
 
                     // Set current version
