@@ -124,6 +124,9 @@ const ExtensionsModalDev = function(extension, row){
                                 if(builder.Helper.inArray(key,["description","repository","download","tracker","support","picture"])){
                                     input.addClass('col-12');
                                 }
+                                if(builder.Helper.inArray(key,["branch","token"])){
+                                    input.addClass('col-6');
+                                }
 
                                 // Set default value
                                 input.val(value);
