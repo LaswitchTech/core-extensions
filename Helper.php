@@ -129,6 +129,193 @@ class ExtensionsHelper extends Helper {
     }
 
     /**
+     * Download a file
+     *
+     * @param string $url
+     * @param string $destination
+     * @return bool
+     */
+    protected function download(string $url, string $destination, $token = null): bool
+    {
+        // Check if the URL is valid
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        // Retrieve the name
+        $name = $this->Config->get('installer','name');
+
+        // Check if the destination directory exists
+        if(!is_dir(dirname($destination))){
+            mkdir(dirname($destination), 0755, true);
+        }
+
+        // Check if the destination file exists
+        if(file_exists($destination)){
+            unlink($destination);
+        }
+
+        // Initialize curl
+        $cURL = curl_init($url);
+
+        // Set Headers
+        $headers = [
+            'User-Agent: ' . $name,
+            'Accept: application/octet-stream',
+        ];
+        if (!is_null($token) && !empty($token)) {
+            $headers[] = 'Authorization: token ' . $token;
+        }
+
+        // Set options for the cURL request
+        $cURLOptions = [
+            // Provide metadata
+            CURLOPT_USERAGENT => $name,
+            // Insert Headers
+            CURLOPT_HEADER => 0,
+            CURLOPT_HTTPHEADER => $headers,
+            // Return the transfer as a string
+            CURLOPT_RETURNTRANSFER => true,
+            // Handle Redirections
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 10,
+            // Handle Connection Timeout
+            CURLOPT_TIMEOUT => 30,
+            // Disable SSL Verification
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+        ];
+
+        // Set the cURL options
+        curl_setopt_array($cURL, $cURLOptions);
+
+        // Execute the request
+        $stream = curl_exec($cURL);
+        $status = curl_getinfo($cURL, CURLINFO_HTTP_CODE);
+        $error = curl_error($cURL);
+
+        // Close cURL session
+        curl_close($cURL);
+
+        // Check if the request was successful
+        if ($status !== 200) {
+            return false;
+        }
+
+        // Create the file using file_put_contents
+        $result = file_put_contents($destination, $stream);
+        if ($result === false) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Unpack (extract) a zip archive to a given location.
+     *
+     * @param string $source Path to the ZIP file.
+     * @param string $destination Directory where files should be extracted.
+     * @return bool true on success, false on failure
+     */
+    protected function unpack(string $source, string $destination): bool
+    {
+        // Check if the archive file exists
+        if (!file_exists($source) || !is_file($source)) {
+            return false;
+        }
+
+        // Attempt to create the destination directory if it doesn't exist
+        if (!is_dir($destination) && !mkdir($destination, 0755, true) && !is_dir($destination)) {
+            return false;
+        }
+
+        // Initialize a new ZipArchive instance
+        $zip = new ZipArchive();
+
+        // Try opening the ZIP file
+        if ($zip->open($source) !== true) {
+            return false;
+        }
+
+        // Extract the contents to the specified destination
+        if (!$zip->extractTo($destination)) {
+            $zip->close();
+            return false;
+        }
+
+        // Close the ZIP
+        $zip->close();
+
+        // Done
+        return true;
+    }
+
+    /**
+     * Recursively delete a directory (including its contents).
+     *
+     * @param string $directory Path to the directory you want to remove
+     * @return bool true on success, false on failure
+     */
+    protected function delete(string $directory): bool
+    {
+        // Set the log channel to 'backup'
+        $this->Log->set('backup');
+
+        // If it doesn't exist, treat it as an error or success depending on your preference
+        if (!file_exists($directory)) {
+            // Option 1: Treat as an error
+            $this->Log->error("Directory does not exist: $directory");
+            return false;
+
+            // Option 2: Treat as success since there's nothing to delete
+            // $this->Log->info("Directory does not exist, nothing to delete: $directory");
+            // return true;
+        }
+
+        // If it's a file or symlink, just unlink it
+        if (!is_dir($directory)) {
+            if (!@unlink($directory)) {
+                $this->Log->error("Failed to delete file or symlink: $directory");
+                return false;
+            }
+            $this->Log->success("Deleted file or symlink: $directory");
+            return true;
+        }
+
+        // Otherwise, recursively remove contents
+        $items = scandir($directory);
+        if ($items === false) {
+            $this->Log->error("Failed to scan directory: $directory");
+            return false;
+        }
+
+        foreach ($items as $item) {
+            // Skip pointers
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $path = $directory . DIRECTORY_SEPARATOR . $item;
+
+            // Recursively call delete on each item
+            if (!$this->delete($path)) {
+                // If any item fails to be deleted, return false
+                return false;
+            }
+        }
+
+        // Finally, remove the now-empty directory
+        if (!@rmdir($directory)) {
+            $this->Log->error("Failed to delete directory (it might not be empty or permission denied): $directory");
+            return false;
+        }
+
+        $this->Log->success("Deleted directory: $directory");
+        return true;
+    }
+
+    /**
      * Get the listing of extensions.
      *
      * @return array
@@ -491,12 +678,38 @@ class ExtensionsHelper extends Helper {
     {
         // Retrieve the extension info
         $extension = $this->get($type, $base);
+
+        // Set the paths
+        $tmpPath = $this->Config->root() . DIRECTORY_SEPARATOR . 'tmp';
+        $archivePath = $tmpPath . DIRECTORY_SEPARATOR . $base . '.zip';
+        $installPath = $this->Config->root() . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . $base;
+
+        // Download the extension's archive
+        if($this->download($extension['download'], $archivePath, $extension['token'] ?? null)){
+
+            // Unpack the archive
+            if($this->unpack($archivePath, $installPath)){
+                return true;
+            } else {
+                throw new RuntimeException("Failed to unpack the extension {$base}.");
+            }
+        } else {
+            throw new RuntimeException("Failed to download the extension {$base}.");
+        }
+
+        return false;
     }
 
     public function uninstall(string $type, string $base): bool
     {
         // Retrieve the extension info
         $extension = $this->get($type, $base);
+
+        // Set the paths
+        $installPath = $this->Config->root() . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . $type . DIRECTORY_SEPARATOR . $base;
+
+        // Return
+        return $this->delete($installPath);
     }
 
     public function update(string $type, string $base): bool

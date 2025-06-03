@@ -275,6 +275,140 @@ const ExtensionsModalUnpublish = function(extension){
         }
     );
 }
+const ExtensionsModalInstall = function(extension){
+    builder.Component(
+        "modal",
+        null,
+        {
+            onEnter: false,
+            destroy: true,
+            icon: "download",
+            title: builder.Locale.get("Install Extension"),
+            body: builder.Locale.get("This will install the extension from the extensions feed. This will allow you to use it in your project."),
+            cancel: false,
+            submit: true,
+            callback: {
+                submit: function(element,modal){
+
+                    // Create a spinner animate-rotate
+                    var spinner = $(document.createElement('div')).attr({
+                        "class": "animate-rotate rounded-circle border border-secondary border-4 d-none",
+                        "style": "width: 96px; height: 96px; border-top-color: var(--bs-primary)!important;",
+                    }).appendTo(element);
+
+                    // Hide the dialog
+                    element.dialog.addClass('opacity-0');
+
+                    // Setup a spinner while waiting for the modal to be submitted
+                    setTimeout(() => {
+
+                        // Hide the dialog
+                        element.dialog.hide();
+
+                        // Add flex to the modal
+                        element.addClass('d-flex align-items-center justify-content-center');
+
+                        // Show the spinner
+                        spinner.removeClass('d-none');
+
+                        // AJAX Request
+                        $.ajax({
+                            url: '/endpoint.php/extensions/install?type='+extension.type+'&base='+extension.base,
+                            type: 'GET',dataType: 'json',
+                            success: function(response){
+
+                                // Close the modal
+                                modal.hide();
+                            }
+                        });
+                    }, 300);
+                },
+            },
+        },
+        function(modal,component){
+
+            // Save the component
+            const componentModal = component;
+
+            // Styling
+            component.header.addClass('text-bg-success');
+            component.footer.submit.addClass('btn-success').removeClass('btn-link').attr({
+                "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
+            }).text(builder.Locale.get('Install Extension'));
+            component.footer.submit.icon = $(document.createElement('i')).addClass('bi bi-download me-1').prependTo(component.footer.submit);
+
+            // Open the modal
+            modal.show();
+        }
+    );
+}
+const ExtensionsModalUninstall = function(extension){
+    builder.Component(
+        "modal",
+        null,
+        {
+            onEnter: false,
+            destroy: true,
+            icon: "trash",
+            title: builder.Locale.get("Uninstall Extension"),
+            body: builder.Locale.get("This will uninstall the extension from your project. This will remove all files and data related to the extension."),
+            cancel: false,
+            submit: true,
+            callback: {
+                submit: function(element,modal){
+
+                    // Create a spinner animate-rotate
+                    var spinner = $(document.createElement('div')).attr({
+                        "class": "animate-rotate rounded-circle border border-secondary border-4 d-none",
+                        "style": "width: 96px; height: 96px; border-top-color: var(--bs-primary)!important;",
+                    }).appendTo(element);
+
+                    // Hide the dialog
+                    element.dialog.addClass('opacity-0');
+
+                    // Setup a spinner while waiting for the modal to be submitted
+                    setTimeout(() => {
+
+                        // Hide the dialog
+                        element.dialog.hide();
+
+                        // Add flex to the modal
+                        element.addClass('d-flex align-items-center justify-content-center');
+
+                        // Show the spinner
+                        spinner.removeClass('d-none');
+
+                        // AJAX Request
+                        $.ajax({
+                            url: '/endpoint.php/extensions/uninstall?type='+extension.type+'&base='+extension.base,
+                            type: 'GET',dataType: 'json',
+                            success: function(response){
+
+                                // Close the modal
+                                modal.hide();
+                            }
+                        });
+                    }, 300);
+                },
+            },
+        },
+        function(modal,component){
+
+            // Save the component
+            const componentModal = component;
+
+            // Styling
+            component.header.addClass('text-bg-danger');
+            component.footer.submit.addClass('btn-danger').removeClass('btn-link').attr({
+                "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
+            }).text(builder.Locale.get('Uninstall Extension'));
+            component.footer.submit.icon = $(document.createElement('i')).addClass('bi bi-trash me-1').prependTo(component.footer.submit);
+
+            // Open the modal
+            modal.show();
+        }
+    );
+}
 const ExtensionsFeed = function(container, extensions){
 
     // Retrieve the first key of the extensions
@@ -410,12 +544,18 @@ const ExtensionsFeed = function(container, extensions){
                     "class": "btn btn-danger",
                 }).text(builder.Locale.get('Uninstall')).appendTo(row.controls);
                 row.controls.uninstall.icon = $(document.createElement('i')).addClass('bi bi-trash me-1').prependTo(row.controls.uninstall);
+                row.controls.uninstall.click(function(){
+                    ExtensionsModalUninstall(extension);
+                });
             }
         } else {
             row.controls.install = $(document.createElement('button')).attr({
                 "class": "btn btn-success",
             }).text(builder.Locale.get('Install')).appendTo(row.controls);
             row.controls.install.icon = $(document.createElement('i')).addClass('bi bi-download me-1').prependTo(row.controls.install);
+            row.controls.install.click(function(){
+                ExtensionsModalInstall(extension);
+            });
         }
 
         // Bind to Search
