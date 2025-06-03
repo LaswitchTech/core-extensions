@@ -157,13 +157,90 @@ class ExtensionsHelper extends Helper {
 
                 // Add the extension to the extensions
                 $this->extensions[$type][$base] = $this->retrieve($extension['url'], $extension['token'] ?? null);
+
+                // Set installed switch
+                $this->extensions[$type][$base]['installed'] = false;
+            }
+
+            // Load other extensions from the filesystem
+            $path = $this->Config->root() . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . $type;
+
+            // Check if the path is a directory
+            if(is_dir($path)) {
+
+                // Scan the directory for extensions
+                $extensions = array_diff(scandir($path), ['..', '.', '.DS_Store']);
+
+                // Add the extensions to the type
+                foreach($extensions as $base){
+
+                    // Set some switches
+                    $published = false;
+                    $initialized = true;
+
+                    // Set the info path
+                    $infoPath = $path . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . 'info.cfg';
+
+                    // Set the git path
+                    $gitPath = $path . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . '.git';
+
+                    // Check if the info file exists
+                    if(file_exists($infoPath)) {
+
+                        // Load the info file
+                        $info = json_decode(file_get_contents($infoPath), true);
+                    } else {
+
+                        // Set Default info;
+                        $info = [
+                            "name" => ucwords(str_replace('-', ' ', $base)),
+                            "type" => $type,
+                            "base" => $base,
+                            "description" => "An extension for the Core Framework.",
+                            "author" => "Unknown",
+                            "email" => null,
+                            "repository" => null,
+                            "download" => null,
+                            "tracker" => null,
+                            "support" => null,
+                            "date" => date('Y-m-d'),
+                            "version" => "v0.0.0",
+                            "picture" => null,
+                            "tags" => null
+                        ];
+                    }
+
+                    // Check if the extension is already defined
+                    if(!array_key_exists($base, $this->extensions[$type]) || count($this->extensions[$type][$base]) < 2){
+
+                        // Load the extension from the filesystem
+                        $this->extensions[$type][$base] = $info;
+                    } else {
+
+                        // Set the extension as published
+                        $published = true;
+                    }
+
+                    // Set current version
+                    $this->extensions[$type][$base]['current'] = $info['version'] ?? 'v0.0.0';
+
+                    // Compare the current version with the latest version and set the latest version
+                    if(isset($this->extensions[$type][$base]['version']) && version_compare($this->extensions[$type][$base]['current'], $this->extensions[$type][$base]['version'], '<')) {
+                        $this->extensions[$type][$base]['latest'] = false;
+                    } else {
+                        $this->extensions[$type][$base]['latest'] = true;
+                    }
+
+                    // Set the extension switches
+                    $this->extensions[$type][$base]['published'] = $published;
+                    $this->extensions[$type][$base]['initialized'] = is_dir($gitPath) && file_exists($infoPath);
+                    $this->extensions[$type][$base]['installed'] = true;
+                }
             }
 
             // Sort the extensions by name
             ksort($this->extensions[$type]);
         }
-
-        var_dump($this->extensions);
 
         return $this;
     }
