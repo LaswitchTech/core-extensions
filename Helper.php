@@ -29,6 +29,37 @@ class ExtensionsHelper extends Helper {
     }
 
     /**
+     * Set the default values for an extension.
+     *
+     * @param string $type The type of extension (e.g., 'module', 'plugin', 'theme').
+     * @param string $base The base name of the extension.
+     * @return array
+     */
+    protected function defaults(string $type, string $base): array
+    {
+        // Set Default info;
+        return [
+            "name"        => ucwords(str_replace('-', ' ', $base)),
+            "type"        => $type,
+            "base"        => $base,
+            "author"      => null,
+            "email"       => null,
+            "date"        => date('Y-m-d'),
+            "current"     => "v0.0.0",
+            "version"     => "v0.0.0",
+            "tags"        => null,
+            "description" => "An extension for the Core Framework.",
+            "repository"  => null,
+            "branch"      => "main",
+            "token"       => null,
+            "download"    => null,
+            "tracker"     => null,
+            "support"     => null,
+            "picture"     => null,
+        ];
+    }
+
+    /**
      * Fetch a JSON file (public or private) and return it as an associative array.
      *
      * @param string      $url    Full URL to the file or GitHub API endpoint.
@@ -155,8 +186,19 @@ class ExtensionsHelper extends Helper {
                     continue;
                 }
 
+                // Set the default values for the extension
+                $this->extensions[$type][$base] = $this->defaults($type, $base);
+
                 // Add the extension to the extensions
-                $this->extensions[$type][$base] = $this->retrieve($extension['url'], $extension['token'] ?? null);
+                foreach($this->retrieve($extension['url'], $extension['token'] ?? null) as $key => $value) {
+
+                    // Check if the key exists in the extension
+                    if(array_key_exists($key, $this->extensions[$type][$base])) {
+
+                        // Set the value in the extension
+                        $this->extensions[$type][$base][$key] = $value;
+                    }
+                }
 
                 // Set installed switch
                 $this->extensions[$type][$base]['installed'] = false;
@@ -184,41 +226,35 @@ class ExtensionsHelper extends Helper {
                     // Set the git path
                     $gitPath = $path . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . '.git';
 
-                    // Check if the info file exists
-                    if(file_exists($infoPath)) {
-
-                        // Load the info file
-                        $info = json_decode(file_get_contents($infoPath), true);
-                    } else {
-
-                        // Set Default info;
-                        $info = [
-                            "name" => ucwords(str_replace('-', ' ', $base)),
-                            "type" => $type,
-                            "base" => $base,
-                            "author" => null,
-                            "email" => null,
-                            "date" => date('Y-m-d'),
-                            "version" => "v0.0.0",
-                            "tags" => null,
-                            "description" => "An extension for the Core Framework.",
-                            "repository" => null,
-                            "download" => null,
-                            "tracker" => null,
-                            "support" => null,
-                            "picture" => null,
-                        ];
-                    }
-
                     // Check if the extension is already defined
                     if(!array_key_exists($base, $this->extensions[$type]) || count($this->extensions[$type][$base]) < 2){
 
-                        // Load the extension from the filesystem
-                        $this->extensions[$type][$base] = $info;
+                        // Set the default values for the extension
+                        $this->extensions[$type][$base] = $this->defaults($type, $base);
                     }
 
-                    // Set current version
-                    $this->extensions[$type][$base]['current'] = $info['version'] ?? 'v0.0.0';
+                    // Check if the info file exists
+                    if(file_exists($infoPath)) {
+
+                        // Add the extension to the extensions
+                        foreach(json_decode(file_get_contents($infoPath)) as $key => $value) {
+
+                            // Check if the key is version
+                            if($key === 'version') {
+
+                                // Set the current version
+                                $this->extensions[$type][$base]['current'] = $value;
+                            } else {
+
+                                // Check if the key exists in the extension
+                                if(array_key_exists($key, $this->extensions[$type][$base])) {
+
+                                    // Set the value in the extension
+                                    $this->extensions[$type][$base][$key] = $value;
+                                }
+                            }
+                        }
+                    }
 
                     // Compare the current version with the latest version and set the latest version
                     if(isset($this->extensions[$type][$base]['version']) && version_compare($this->extensions[$type][$base]['current'], $this->extensions[$type][$base]['version'], '<')) {
@@ -285,22 +321,7 @@ class ExtensionsHelper extends Helper {
     public function meta(string $type, string $base, array $meta): bool
     {
         // Set Default info;
-        $info = [
-            "name" => ucwords(str_replace('-', ' ', $base)),
-            "type" => $type,
-            "base" => $base,
-            "author" => null,
-            "email" => null,
-            "date" => date('Y-m-d'),
-            "version" => "v0.0.0",
-            "tags" => null,
-            "description" => "An extension for the Core Framework.",
-            "repository" => null,
-            "download" => null,
-            "tracker" => null,
-            "support" => null,
-            "picture" => null,
-        ];
+        $info = $this->defaults($type, $base);
 
         // Replace the info with the data provided
         foreach($this->get($type, $base) as $key => $value) {
