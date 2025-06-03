@@ -25,18 +25,51 @@ class ExtensionsEndpoint extends Endpoint {
         $namespace = $this->Request->getNamespace();
 
         // Set Global access
-        $this->Public = true;
+        $this->Public = false;
 
         // Set Properties
         switch($namespace){
-            case "/extensions/status":
-                $this->Level = 1;
-                break;
-            case "/extensions/on":
-            case "/extensions/off":
-                $this->Public = false;
+            case "/extensions/fetchAll":
                 $this->Level = 1;
                 break;
         }
+    }
+
+    /**
+     * Fetch all extensions
+     */
+    public function fetchAllAction()
+    {
+        // Set the default message
+        $message = ["status" => 200, "message" => "OK", "data" => []];
+
+        // Check if the status is still OK
+        if($message['status'] == 200){
+
+            // Check the request method
+            if($this->Request->getMethod() == "GET"){
+
+                // Retrieve the type of extensions to fetch
+                $type = $this->Request->getParams('GET', 'type') ?? null;
+
+                // Check if the type is set
+                if($type){
+
+                    // Get the extensions listing
+                    $message['data'] = $this->Helper->Extensions->get($type);
+                } else {
+
+                    // Get the extensions listing
+                    $message['data'] = [
+                        "modules" => $this->Helper->Extensions->get('modules'),
+                        "plugins" => $this->Helper->Extensions->get('plugins'),
+                        "themes" => $this->Helper->Extensions->get('themes'),
+                    ];
+                }
+            }
+        }
+
+        // Return the message
+        return $message;
     }
 }
