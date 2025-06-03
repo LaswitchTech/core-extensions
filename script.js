@@ -141,6 +141,140 @@ const ExtensionsModalDev = function(extension, row){
         }
     );
 }
+const ExtensionsModalPublish = function(extension){
+    builder.Component(
+        "modal",
+        null,
+        {
+            onEnter: false,
+            destroy: true,
+            icon: "check-lg",
+            title: builder.Locale.get("Publish Extension"),
+            body: builder.Locale.get("This will publish the extension to the extensions feed. This will allow other users to install it."),
+            cancel: false,
+            submit: true,
+            callback: {
+                submit: function(element,modal){
+
+                    // Create a spinner animate-rotate
+                    var spinner = $(document.createElement('div')).attr({
+                        "class": "animate-rotate rounded-circle border border-secondary border-4 d-none",
+                        "style": "width: 96px; height: 96px; border-top-color: var(--bs-primary)!important;",
+                    }).appendTo(element);
+
+                    // Hide the dialog
+                    element.dialog.addClass('opacity-0');
+
+                    // Setup a spinner while waiting for the modal to be submitted
+                    setTimeout(() => {
+
+                        // Hide the dialog
+                        element.dialog.hide();
+
+                        // Add flex to the modal
+                        element.addClass('d-flex align-items-center justify-content-center');
+
+                        // Show the spinner
+                        spinner.removeClass('d-none');
+
+                        // AJAX Request
+                        $.ajax({
+                            url: '/endpoint.php/extensions/publish?type='+extension.type+'&base='+extension.base,
+                            type: 'GET',dataType: 'json',
+                            success: function(response){
+
+                                // Close the modal
+                                modal.hide();
+                            }
+                        });
+                    }, 300);
+                },
+            },
+        },
+        function(modal,component){
+
+            // Save the component
+            const componentModal = component;
+
+            // Styling
+            component.header.addClass('text-bg-blue');
+            component.footer.submit.addClass('btn-blue').removeClass('btn-link').attr({
+                "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
+            }).text(builder.Locale.get('Publish Extension'));
+            component.footer.submit.icon = $(document.createElement('i')).addClass('bi bi-check-lg me-1').prependTo(component.footer.submit);
+
+            // Open the modal
+            modal.show();
+        }
+    );
+}
+const ExtensionsModalUnpublish = function(extension){
+    builder.Component(
+        "modal",
+        null,
+        {
+            onEnter: false,
+            destroy: true,
+            icon: "x-lg",
+            title: builder.Locale.get("Unpublish Extension"),
+            body: builder.Locale.get("This will unpublish the extension from the extensions feed. This will prevent other users from installing it."),
+            cancel: false,
+            submit: true,
+            callback: {
+                submit: function(element,modal){
+
+                    // Create a spinner animate-rotate
+                    var spinner = $(document.createElement('div')).attr({
+                        "class": "animate-rotate rounded-circle border border-secondary border-4 d-none",
+                        "style": "width: 96px; height: 96px; border-top-color: var(--bs-primary)!important;",
+                    }).appendTo(element);
+
+                    // Hide the dialog
+                    element.dialog.addClass('opacity-0');
+
+                    // Setup a spinner while waiting for the modal to be submitted
+                    setTimeout(() => {
+
+                        // Hide the dialog
+                        element.dialog.hide();
+
+                        // Add flex to the modal
+                        element.addClass('d-flex align-items-center justify-content-center');
+
+                        // Show the spinner
+                        spinner.removeClass('d-none');
+
+                        // AJAX Request
+                        $.ajax({
+                            url: '/endpoint.php/extensions/unpublish?type='+extension.type+'&base='+extension.base,
+                            type: 'GET',dataType: 'json',
+                            success: function(response){
+
+                                // Close the modal
+                                modal.hide();
+                            }
+                        });
+                    }, 300);
+                },
+            },
+        },
+        function(modal,component){
+
+            // Save the component
+            const componentModal = component;
+
+            // Styling
+            component.header.addClass('text-bg-danger');
+            component.footer.submit.addClass('btn-danger').removeClass('btn-link').attr({
+                "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
+            }).text(builder.Locale.get('Unpublish Extension'));
+            component.footer.submit.icon = $(document.createElement('i')).addClass('bi bi-x-lg me-1').prependTo(component.footer.submit);
+
+            // Open the modal
+            modal.show();
+        }
+    );
+}
 const ExtensionsFeed = function(container, extensions){
 
     // Retrieve the first key of the extensions
