@@ -196,17 +196,17 @@ class ExtensionsHelper extends Helper {
                             "name" => ucwords(str_replace('-', ' ', $base)),
                             "type" => $type,
                             "base" => $base,
-                            "description" => "An extension for the Core Framework.",
-                            "author" => "Unknown",
+                            "author" => null,
                             "email" => null,
+                            "date" => date('Y-m-d'),
+                            "version" => "v0.0.0",
+                            "tags" => null,
+                            "description" => "An extension for the Core Framework.",
                             "repository" => null,
                             "download" => null,
                             "tracker" => null,
                             "support" => null,
-                            "date" => date('Y-m-d'),
-                            "version" => "v0.0.0",
                             "picture" => null,
-                            "tags" => null
                         ];
                     }
 
