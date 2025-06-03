@@ -369,7 +369,7 @@ const ExtensionsFeed = function(container, extensions){
         // Version
         row.version = $(document.createElement('div')).addClass('flex-shrink-0 px-3').appendTo(row);
         row.version.header = $(document.createElement('h5')).addClass('m-0').appendTo(row.version);
-        row.version.badge = $(document.createElement('span')).addClass('badge text-bg-blue').attr('data-key','version').text(extension.version).appendTo(row.version.header);
+        row.version.badge = $(document.createElement('span')).addClass('badge text-bg-blue').attr('data-key','version').text(extension.current).appendTo(row.version.header);
 
         // Controls
         row.controls = $(document.createElement('div')).addClass('flex-shrink-0 btn-group-vertical').appendTo(row);
