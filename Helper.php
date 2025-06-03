@@ -19,7 +19,8 @@ class ExtensionsHelper extends Helper {
     /**
      * Constructor
      */
-    public function __construct() {
+    public function __construct()
+    {
 
         // Call parent constructor
         parent::__construct();
@@ -218,7 +219,6 @@ class ExtensionsHelper extends Helper {
 
                     // Set some switches
                     $published = array_key_exists($base, $this->extensions[$type]);
-                    $initialized = true;
 
                     // Set the info path
                     $infoPath = $path . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . 'info.cfg';
