@@ -552,7 +552,7 @@ const ExtensionsFeed = function(container, extensions){
         }
 
         // Manual Install Alert
-        if(extension.installed && !extension.initialized && !extension.published){
+        if(!extension.published){
             row.meta.initialize = $(document.createElement('div')).attr({
                 "class": "alert alert-warning mt-3 p-2 px-3",
             }).text(builder.Locale.get('This extension was manually installed.')).appendTo(row.meta);
@@ -560,7 +560,7 @@ const ExtensionsFeed = function(container, extensions){
         }
 
         // Git Install Alert
-        if(extension.initialized){
+        if(extension.git){
             row.meta.initialize = $(document.createElement('div')).attr({
                 "class": "alert alert-danger mt-3 p-2 px-3",
             }).text(builder.Locale.get('This extension was installed using Git.')).appendTo(row.meta);
@@ -584,7 +584,7 @@ const ExtensionsFeed = function(container, extensions){
                     ExtensionsModalUpdate(extension);
                 });
             }
-            if(extension.initialized){
+            if(extension.git){
                 if(!extension.published) {
                     row.controls.publish = $(document.createElement('button')).attr({
                         "class": "btn btn-blue",
