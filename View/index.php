@@ -50,6 +50,13 @@
                                 },
                             );
                         }
+
+                        // Add a tab for importation
+                        tabs.add(
+                            "import",
+                            {label: builder.Locale.get("Import")},
+                            function(tab, nav){},
+                        );
                     }
                 });
             },
