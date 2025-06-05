@@ -61,23 +61,8 @@ class ExtensionsEndpoint extends Endpoint {
             // Check the request method
             if($this->Request->getMethod() == "GET"){
 
-                // Retrieve the type of extensions to fetch
-                $type = $this->Request->getParams('GET', 'type') ?? null;
-
-                // Check if the type is set
-                if($type){
-
-                    // Get the extensions listing
-                    $message['data'] = $this->Helper->Extensions->get($type);
-                } else {
-
-                    // Get the extensions listing
-                    $message['data'] = [
-                        "modules" => $this->Helper->Extensions->get('modules'),
-                        "plugins" => $this->Helper->Extensions->get('plugins'),
-                        "themes" => $this->Helper->Extensions->get('themes'),
-                    ];
-                }
+                // Get the extensions listing
+                $message['data'] = $this->Helper->Core->loadExtensionsMeta(true);
             }
         }
 
