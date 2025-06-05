@@ -32,7 +32,7 @@
                             case 404: color = 'warning'; icon = 'question-diamond'; break;
                             case 500: color = 'danger'; icon = 'bug'; break;
                         }
-                        builder.Component("alert",tab,{icon:icon,color:color,title:title},function(alert,component){component.content.html('<pre class="m-0 p-2">'+content+'</pre>');});
+                        builder.Component("alert","#layout",{icon:icon,color:color,title:title},function(alert,component){component.content.html('<pre class="m-0 p-2">'+content+'</pre>');});
                     },
                     success: function(response) {
 
