@@ -105,7 +105,7 @@ const ExtensionsModalDev = function(extension, row){
                     for(const [key, value] of Object.entries(extension)){
 
                         // Check if key is in array
-                        if(builder.Helper.inArray(key,["type","base","current","latest","installed","published","initialized"])){
+                        if(builder.Helper.inArray(key,["type","base","current","latest","installed","published","git","date","path","source","branch"])){
                             continue;
                         }
 
@@ -121,11 +121,11 @@ const ExtensionsModalDev = function(extension, row){
                             function(input){
 
                                 // Styling
-                                if(builder.Helper.inArray(key,["description","repository","download","tracker","support","picture"])){
+                                if(builder.Helper.inArray(key,["description","repository","download","tracker","support","token","picture"])){
                                     input.addClass('col-12');
                                 }
-                                if(builder.Helper.inArray(key,["branch","token"])){
-                                    input.addClass('col-6');
+                                if(builder.Helper.inArray(key,["tags"])){
+                                    input.addClass('col-8');
                                 }
 
                                 // Set default value
@@ -141,7 +141,7 @@ const ExtensionsModalDev = function(extension, row){
         }
     );
 }
-const ExtensionsModalPublish = function(extension){
+const ExtensionsModalPublish = function(extension, options = []){
     builder.Component(
         "modal",
         null,
@@ -150,7 +150,6 @@ const ExtensionsModalPublish = function(extension){
             destroy: true,
             icon: "check-lg",
             title: builder.Locale.get("Publish Extension"),
-            body: builder.Locale.get("This will publish the extension to the extensions feed. This will allow other users to install it."),
             cancel: false,
             submit: true,
             callback: {
@@ -177,16 +176,8 @@ const ExtensionsModalPublish = function(extension){
                         // Show the spinner
                         spinner.removeClass('d-none');
 
-                        // AJAX Request
-                        $.ajax({
-                            url: '/endpoint.php/extensions/publish?type='+extension.type+'&base='+extension.base,
-                            type: 'GET',dataType: 'json',
-                            success: function(response){
-
-                                // Close the modal
-                                modal.hide();
-                            }
-                        });
+                        // Submit the form
+                        element.form.submit();
                     }, 300);
                 },
             },
@@ -203,8 +194,60 @@ const ExtensionsModalPublish = function(extension){
             }).text(builder.Locale.get('Publish Extension'));
             component.footer.submit.icon = $(document.createElement('i')).addClass('bi bi-check-lg me-1').prependTo(component.footer.submit);
 
-            // Open the modal
-            modal.show();
+            // Add a little description
+            component.body.description = $(document.createElement('p')).text(builder.Locale.get("This will publish the extension to the extensions feed. This will allow other users to install it.")).appendTo(component.body);
+
+            // Form
+            component.form = builder.Component(
+                'form',
+                component.body,
+                {
+                    callback:{
+                        submit: function(form){
+
+                            console.log(form.val());
+
+                            // AJAX Request
+                            $.ajax({
+                                url: '/endpoint.php/extensions/publish?type='+extension.type+'&base='+extension.base,
+                                headers: {'X-CSRF-Authorization': CSRF_KEY},
+                                type: 'POST',dataType: 'json',
+                                data: form.val(),
+                                success: function(response){
+
+                                    // Update CSRF
+                                    CSRF_KEY = response.CSRF.key;
+                                    CSRF_TOKEN = response.CSRF.token;
+
+                                    // Close the modal
+                                    modal.hide();
+                                }
+                            });
+                        },
+                    },
+                },
+                function(form,component){
+
+                    // Create a select
+                    form.add(
+                        {
+                            name: "feed",
+                            label: builder.Locale.get("Feed"),
+                            icon: 'node-plus',
+                            type: 'select',
+                            options: options,
+                            modal: componentModal,
+                        },
+                        function(input){
+
+                            // Set default value
+                            input.val('local');
+                        },
+                    );
+                    // Open the modal
+                    modal.show();
+                },
+            );
         }
     );
 }
@@ -476,7 +519,7 @@ const ExtensionsModalUpdate = function(extension){
         }
     );
 }
-const ExtensionsFeed = function(container, extensions){
+const ExtensionsFeed = function(container, extensions, options = []){
 
     // Retrieve the first key of the extensions
     const first = Object.keys(extensions)[0];
@@ -531,7 +574,7 @@ const ExtensionsFeed = function(container, extensions){
                 "href": extension.repository,
                 "target": "_blank",
                 "class": "btn btn-sm btn-outline-secondary me-2",
-            }).text(builder.Locale.get('Repository')).appendTo(row.meta.links);
+            }).text(builder.Locale.get('Source')).appendTo(row.meta.links);
             row.meta.links.repo.icon = $(document.createElement('i')).addClass('bi bi-git me-1').css('color','var(--bs-orange)').prependTo(row.meta.links.repo);
         }
         if(typeof extension.tracker !== 'undefined' && extension.tracker !== null && extension.tracker !== '') {
@@ -539,7 +582,7 @@ const ExtensionsFeed = function(container, extensions){
                 "href": extension.tracker,
                 "target": "_blank",
                 "class": "btn btn-sm btn-outline-secondary me-2",
-            }).text(builder.Locale.get('Tracker')).appendTo(row.meta.links);
+            }).text(builder.Locale.get('Bug Tracker')).appendTo(row.meta.links);
             row.meta.links.tracker.icon = $(document.createElement('i')).addClass('bi bi-bug-fill me-1').css('color','var(--bs-indigo)').prependTo(row.meta.links.tracker);
         }
         if(typeof extension.support !== 'undefined' && extension.support !== null && extension.support !== '') {
@@ -591,7 +634,7 @@ const ExtensionsFeed = function(container, extensions){
                     }).text(builder.Locale.get('Publish')).appendTo(row.controls);
                     row.controls.publish.icon = $(document.createElement('i')).addClass('bi bi-check-lg me-1').prependTo(row.controls.publish);
                     row.controls.publish.click(function(){
-                        ExtensionsModalPublish(extension);
+                        ExtensionsModalPublish(extension, options);
                     });
                 } else {
                     row.controls.unpublish = $(document.createElement('button')).attr({
