@@ -36,6 +36,24 @@
                     },
                     success: function(response) {
 
+                        // Build a list of options
+                        var options = [
+                            {id: 'local', text: builder.Locale.get('Local Application Feed')},
+                        ];
+
+                        // Check if modules are available
+                        if(typeof response.modules !== 'undefined' && Object.entries(response.modules).length > 0){
+
+                            // Loop through the modules
+                            for(const [base, extension] of Object.entries(response.modules)){
+
+                                // Check if the extension has git enabled
+                                if(extension.git){
+                                    options.push({id: base, text: builder.Locale.get('Module') + ': ' + extension.name});
+                                }
+                            }
+                        }
+
                         // Loop through the types
                         for(const [type, extensions] of Object.entries(response)){
 
@@ -46,7 +64,7 @@
                                 function(tab, nav){
 
                                     // Generate the feed
-                                    ExtensionsFeed(tab, extensions);
+                                    ExtensionsFeed(tab, extensions, options);
                                 },
                             );
                         }
