@@ -107,8 +107,51 @@ class ExtensionsEndpoint extends Endpoint {
                     // Retrieve the meta information from the request
                     $meta = $this->Request->getParams('POST', 'meta') ?? null;
 
-                    // Update the meta information
-                    $message["data"]["status"] = $this->Helper->Extensions->meta($type, $base, $meta);
+                    // Load the meta information
+                    $extensions = $this->Helper->Core->loadExtensionsMeta(true);
+
+                    // Check if the type and base exist in the extensions
+                    if(array_key_exists($type, $extensions) && array_key_exists($base, $extensions[$type])){
+
+                        // Select the extension
+                        $extension = $extensions[$type][$base];
+
+                        // Check if git is enabled
+                        if($extension['git']){
+
+                            // Replace the meta information with the data provided
+                            foreach($meta as $key => $value) {
+                                if(array_key_exists($key, $extension)) {
+                                    $extension[$key] = $value;
+                                }
+                            }
+
+                            // Set the paths
+                            $infoPath = $extension['path'] . DIRECTORY_SEPARATOR . 'info.cfg';
+                            $gitPath = $extension['path'] . DIRECTORY_SEPARATOR . '.git';
+
+                            // Unset the meta information that is not allowed
+                            foreach($extension as $key => $value) {
+                                if(!in_array($key, ['name', 'type', 'base', 'author', 'email', 'date', 'version', 'tags', 'description', 'repository', 'download', 'tracker', 'support', 'picture'])) {
+                                    unset($extension[$key]);
+                                }
+                            }
+
+                            // Convert the extension to JSON
+                            $json = json_encode($extension, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+                            // Update the meta information
+                            $message["data"]["status"] = is_dir($gitPath) ? file_put_contents($infoPath, $json) !== false : false;
+                        } else {
+
+                            // Set the error message
+                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Git is not enabled for this extension."];
+                        }
+                    } else {
+
+                        // Set the error message
+                        $message = ["status" => 404, "message" => "Not Found", "data" => "Extension not found."];
+                    }
                 } else {
 
                     // Set the error message
@@ -126,14 +169,26 @@ class ExtensionsEndpoint extends Endpoint {
      */
     public function publishAction()
     {
+        // Import Global Variables
+        global $CSRF;
+
         // Set the default message
         $message = ["status" => 200, "message" => "OK", "data" => []];
+
+        // Check the request method
+        if($this->Request->getMethod() == "POST"){
+            $message["data"]["CSRF"] = [
+                "token" => $CSRF->token(),
+                "key" => $CSRF->key()
+            ];
+        }
+
 
         // Check if the status is still OK
         if($message['status'] == 200){
 
             // Check the request method
-            if($this->Request->getMethod() == "GET"){
+            if($this->Request->getMethod() == "POST"){
 
                 // Retrieve the type of extensions to update
                 $type = $this->Request->getParams('GET', 'type') ?? null;
@@ -141,16 +196,131 @@ class ExtensionsEndpoint extends Endpoint {
                 // Retrieve the base of the extensions to update
                 $base = $this->Request->getParams('GET', 'base') ?? null;
 
-                // Check if the type is set
-                if($type && $base){
+                // Retrieve the feed of the extensions to be published in
+                $feed = $this->Request->getParams('REQUEST', 'feed') ?? null;
 
-                    // Update the meta information
-                    $message["data"]["status"] = $this->Helper->Extensions->publish($type, $base);
+                // Check if the required data is set
+                if($type && $base && $feed){
+
+                    // Load the meta information
+                    $extensions = $this->Helper->Core->loadExtensionsMeta(true);
+
+                    // Check if the type and base exist in the extensions
+                    if(array_key_exists($type, $extensions) && array_key_exists($base, $extensions[$type])){
+
+                        // Select the extension
+                        $extension = $extensions[$type][$base];
+
+                        // Check if published is enabled
+                        if(!$extension['published']){
+
+                            // Check if git is enabled
+                            if($extension['git']){
+
+                                // Check if the feed is the local feed
+                                if($feed == 'local'){
+
+                                    // Retrieve the application feed listing
+                                    $feedListing = $this->Config->get('extensions');
+
+                                    // Parse the repository URL
+                                    $url = $this->Helper->Core->getRepo($extension['repository'])['url'];
+
+                                    // Check if the URL is valid
+                                    if($url){
+
+                                        // Set the extension in the feed listing
+                                        $feedListing[$type][$base] = ['url' => $url];
+
+                                        // Check if the token is set
+                                        if(array_key_exists('token', $extension) && $extension['token']){
+
+                                            // Set the token in the feed listing
+                                            $feedListing[$type][$base]['token'] = $extension['token'];
+                                        }
+
+                                        // Save the feed listing
+                                        $message["data"]["status"] = $this->Config->set('extensions', $type, $feedListing[$type]);
+                                    } else {
+
+                                        // Set the error message
+                                        $message = ["status" => 400, "message" => "Bad Request", "data" => "Invalid repository URL."];
+                                    }
+                                } else {
+
+                                    // Check if the feed exist in the extensions
+                                    if(array_key_exists('modules', $extensions) && array_key_exists($feed, $extensions['modules'])){
+
+                                        // Select the feed
+                                        $feed = $extensions['modules'][$feed];
+
+                                        // Check if git is enabled
+                                        if($feed['git']){
+
+                                            // Retrieve the application feed listing
+                                            $feedListing = json_decode(file_get_contents($feed['path'] . DIRECTORY_SEPARATOR . "listing.cfg") ?? "[]", true);
+
+                                            // Parse the repository URL
+                                            $url = $this->Helper->Core->getRepo($extension['repository'])['url'];
+
+                                            // Check if the URL is valid
+                                            if($url){
+
+                                                // Set the extension in the feed listing
+                                                $feedListing[$type][$base] = ['url' => $url];
+
+                                                // Check if the token is set
+                                                if(array_key_exists('token', $extension) && $extension['token']){
+
+                                                    // Set the token in the feed listing
+                                                    $feedListing[$type][$base]['token'] = $extension['token'];
+                                                }
+
+                                                // Convert the feed listing to JSON
+                                                $json = json_encode($feedListing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+                                                // Save the feed listing to the file
+                                                $message["data"]["status"] = file_put_contents($feed['path'] . DIRECTORY_SEPARATOR . "listing.cfg", $json) !== false;
+                                            } else {
+
+                                                // Set the error message
+                                                $message = ["status" => 400, "message" => "Bad Request", "data" => "Invalid repository URL."];
+                                            }
+                                        } else {
+
+                                            // Set the error message
+                                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Git is not enabled for this feed."];
+                                        }
+                                    } else {
+
+                                        // Set the error message
+                                        $message = ["status" => 404, "message" => "Not Found", "data" => "Feed not found."];
+                                    }
+                                }
+                            } else {
+
+                                // Set the error message
+                                $message = ["status" => 400, "message" => "Bad Request", "data" => "Git is not enabled for this extension."];
+                            }
+                        } else {
+
+                            // Set the error message
+                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Extension is already published."];
+                        }
+                    } else {
+
+                        // Set the error message
+                        $message = ["status" => 404, "message" => "Not Found", "data" => "Extension not found."];
+                    }
                 } else {
 
                     // Set the error message
-                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Type and base parameters are required."];
+                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Type, base and feed parameters are required."];
                 }
+            } else {
+
+                // Set the error message
+                $message = ["status" => 405, "message" => "Method Not Allowed", "data" => "This endpoint only accepts POST requests."];
             }
         }
 
@@ -181,8 +351,97 @@ class ExtensionsEndpoint extends Endpoint {
                 // Check if the type is set
                 if($type && $base){
 
-                    // Update the meta information
-                    $message["data"]["status"] = $this->Helper->Extensions->unpublish($type, $base);
+                    // Load the meta information
+                    $extensions = $this->Helper->Core->loadExtensionsMeta(true);
+
+                    // Check if the type and base exist in the extensions
+                    if(array_key_exists($type, $extensions) && array_key_exists($base, $extensions[$type])){
+
+                        // Select the extension
+                        $extension = $extensions[$type][$base];
+
+                        // Check if published is enabled
+                        if($extension['published']){
+
+                            // Check if git is enabled
+                            if($extension['git']){
+
+                                // Retrieve the source from which the extension was published
+                                $source = trim(str_replace($this->Config->root(),'',$extension['source']), DIRECTORY_SEPARATOR);
+
+                                // Retrieve the first part of the source
+                                $sourcePath = explode(DIRECTORY_SEPARATOR, $source)[0];
+
+                                // Identify the listing path
+                                switch($sourcePath){
+                                    case 'config':
+                                        $gitPath = $this->Config->root() . DIRECTORY_SEPARATOR . '.git';
+                                        $headPath = $gitPath . DIRECTORY_SEPARATOR . 'HEAD';
+                                        $feedGit = is_dir($gitPath) && file_exists($headPath);
+                                        break;
+                                    case 'lib':
+                                        $gitPath = dirname($extension['source']) . DIRECTORY_SEPARATOR . '.git';
+                                        $headPath = $gitPath . DIRECTORY_SEPARATOR . 'HEAD';
+                                        $feedGit = is_dir($gitPath) && file_exists($headPath);
+                                        break;
+                                    default:
+                                        $feedGit = false;
+                                        break;
+                                }
+
+                                // Check if the feed is in development
+                                if($feedGit){
+
+                                    // Retrieve the application feed listing
+                                    $feedListing = json_decode(file_get_contents($extension['source']) ?? "[]", true);
+
+                                    // Parse the repository URL
+                                    $url = $this->Helper->Core->getRepo($extension['repository'])['url'];
+
+                                    // Check if the URL is valid
+                                    if($url){
+
+                                        // Check if the feed exist in the extensions
+                                        if(array_key_exists($type, $feedListing) && array_key_exists($base, $feedListing[$type])){
+
+                                            // Unset the extension from the feed listing
+                                            unset($feedListing[$type][$base]);
+
+                                            // Convert the feed listing to JSON
+                                            $json = json_encode($feedListing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+                                            // Save the feed listing to the file
+                                            $message["data"]["status"] = file_put_contents($extension['source'], $json) !== false;
+                                        } else {
+
+                                            // Set the error message
+                                            $message = ["status" => 404, "message" => "Not Found", "data" => "Could not find the extension in the feed listing."];
+                                        }
+                                    } else {
+
+                                        // Set the error message
+                                        $message = ["status" => 400, "message" => "Bad Request", "data" => "Invalid repository URL."];
+                                    }
+                                } else {
+
+                                    // Set the error message
+                                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Git is not enabled for this feed."];
+                                }
+                            } else {
+
+                                // Set the error message
+                                $message = ["status" => 400, "message" => "Bad Request", "data" => "Git is not enabled for this extension."];
+                            }
+                        } else {
+
+                            // Set the error message
+                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Extension is not published."];
+                        }
+                    } else {
+
+                        // Set the error message
+                        $message = ["status" => 404, "message" => "Not Found", "data" => "Extension not found."];
+                    }
                 } else {
 
                     // Set the error message
@@ -218,8 +477,57 @@ class ExtensionsEndpoint extends Endpoint {
                 // Check if the type is set
                 if($type && $base){
 
-                    // Update the meta information
-                    $message["data"]["status"] = $this->Helper->Extensions->install($type, $base);
+                    // Load the meta information
+                    $extensions = $this->Helper->Core->loadExtensionsMeta(true);
+
+                    // Check if the type and base exist in the extensions
+                    if(array_key_exists($type, $extensions) && array_key_exists($base, $extensions[$type])){
+
+                        // Select the extension
+                        $extension = $extensions[$type][$base];
+
+                        // Check if the extension is already installed
+                        if(!$extension['installed']){
+
+                            // Set a temporary path
+                            $tmpPath = $this->Config->root() . DIRECTORY_SEPARATOR . 'tmp';
+
+                            // Set a path for the archive
+                            $archivePath = $tmpPath . DIRECTORY_SEPARATOR . $extension['base'] . '.zip';
+
+                            // Download the extension archive
+                            if($this->Helper->Core->download($extension['download'], $archivePath, $extension['token'] ?? null)){
+
+                                // Unpack the archive to the extension path
+                                if($this->Helper->Core->unpack($archivePath, $extension['path'])){
+
+                                    // Unset the archive file
+                                    if(file_exists($archivePath)){
+                                        unlink($archivePath);
+                                    }
+
+                                    // Set the status
+                                    $message["data"]["status"] = true;
+                                } else {
+
+                                    // Set the error message
+                                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Could not unpack the extension archive."];
+                                }
+                            } else {
+
+                                // Set the error message
+                                $message = ["status" => 400, "message" => "Bad Request", "data" => "Could not download the extension archive."];
+                            }
+                        } else {
+
+                            // Set the error message
+                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Extension is already installed."];
+                        }
+                    } else {
+
+                        // Set the error message
+                        $message = ["status" => 404, "message" => "Not Found", "data" => "Extension not found."];
+                    }
                 } else {
 
                     // Set the error message
@@ -255,8 +563,38 @@ class ExtensionsEndpoint extends Endpoint {
                 // Check if the type is set
                 if($type && $base){
 
-                    // Update the meta information
-                    $message["data"]["status"] = $this->Helper->Extensions->uninstall($type, $base);
+                    // Load the meta information
+                    $extensions = $this->Helper->Core->loadExtensionsMeta(true);
+
+                    // Check if the type and base exist in the extensions
+                    if(array_key_exists($type, $extensions) && array_key_exists($base, $extensions[$type])){
+
+                        // Select the extension
+                        $extension = $extensions[$type][$base];
+
+                        // Check if the extension is already installed
+                        if($extension['installed']){
+
+                            // Delete the extension path
+                            if($this->Helper->Core->delete($extension['path'])){
+
+                                // Set the status
+                                $message["data"]["status"] = true;
+                            } else {
+
+                                // Set the error message
+                                $message = ["status" => 400, "message" => "Bad Request", "data" => "Failed to uninstall the extension."];
+                            }
+                        } else {
+
+                            // Set the error message
+                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Extension is not installed."];
+                        }
+                    } else {
+
+                        // Set the error message
+                        $message = ["status" => 404, "message" => "Not Found", "data" => "Extension not found."];
+                    }
                 } else {
 
                     // Set the error message
@@ -292,8 +630,57 @@ class ExtensionsEndpoint extends Endpoint {
                 // Check if the type is set
                 if($type && $base){
 
-                    // Update the meta information
-                    $message["data"]["status"] = $this->Helper->Extensions->install($type, $base);
+                    // Load the meta information
+                    $extensions = $this->Helper->Core->loadExtensionsMeta(true);
+
+                    // Check if the type and base exist in the extensions
+                    if(array_key_exists($type, $extensions) && array_key_exists($base, $extensions[$type])){
+
+                        // Select the extension
+                        $extension = $extensions[$type][$base];
+
+                        // Check if the extension is already installed
+                        if($extension['installed']){
+
+                            // Set a temporary path
+                            $tmpPath = $this->Config->root() . DIRECTORY_SEPARATOR . 'tmp';
+
+                            // Set a path for the archive
+                            $archivePath = $tmpPath . DIRECTORY_SEPARATOR . $extension['base'] . '.zip';
+
+                            // Download the extension archive
+                            if($this->Helper->Core->download($extension['download'], $archivePath, $extension['token'] ?? null)){
+
+                                // Unpack the archive to the extension path
+                                if($this->Helper->Core->unpack($archivePath, $extension['path'])){
+
+                                    // Unset the archive file
+                                    if(file_exists($archivePath)){
+                                        unlink($archivePath);
+                                    }
+
+                                    // Set the status
+                                    $message["data"]["status"] = true;
+                                } else {
+
+                                    // Set the error message
+                                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Could not unpack the extension archive."];
+                                }
+                            } else {
+
+                                // Set the error message
+                                $message = ["status" => 400, "message" => "Bad Request", "data" => "Could not download the extension archive."];
+                            }
+                        } else {
+
+                            // Set the error message
+                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Extension is not installed."];
+                        }
+                    } else {
+
+                        // Set the error message
+                        $message = ["status" => 404, "message" => "Not Found", "data" => "Extension not found."];
+                    }
                 } else {
 
                     // Set the error message
