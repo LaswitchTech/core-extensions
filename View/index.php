@@ -73,7 +73,82 @@
                         tabs.add(
                             "import",
                             {label: builder.Locale.get("Import")},
-                            function(tab, nav){},
+                            function(tab, nav){
+
+                                // Form
+                                tab.form = builder.Component(
+                                    'form',
+                                    tab,
+                                    {
+                                        class:{
+                                            form: 'row g-3',
+                                            field: 'col-12',
+                                        },
+                                        callback:{
+                                            submit: function(form){
+
+                                                // // AJAX Request
+                                                // $.ajax({
+                                                //     url: '/endpoint.php/extensions/meta?type='+extension.type+'&base='+extension.base,
+                                                //     headers: {'X-CSRF-Authorization': CSRF_KEY},
+                                                //     type: 'POST',dataType: 'json',
+                                                //     data: {meta: form.val()},
+                                                //     success: function(response){
+
+                                                //         // Update CSRF
+                                                //         CSRF_KEY = response.CSRF.key;
+                                                //         CSRF_TOKEN = response.CSRF.token;
+
+                                                //         // Loop through the tables
+                                                //         for(const [key, value] of Object.entries(form.val())){
+                                                //             switch(key){
+                                                //                 default:
+                                                //                     row.find('[data-key="'+key+'"]').text(value);
+                                                //                     break;
+                                                //             }
+                                                //         }
+
+                                                //         // Close the modal
+                                                //         modal.hide();
+                                                //     }
+                                                // });
+                                            },
+                                        },
+                                    },
+                                    function(form,component){
+
+                                        // URL
+                                        form.add(
+                                            {
+                                                name: 'url',
+                                                label: builder.Locale.get('URL'),
+                                                icon: 'git',
+                                                type: 'text',
+                                            },
+                                        );
+
+                                        // Token
+                                        form.add(
+                                            {
+                                                name: 'token',
+                                                label: builder.Locale.get('Token'),
+                                                icon: 'key',
+                                                type: 'text',
+                                            },
+                                        );
+
+                                        // Submit
+                                        form.add(
+                                            {
+                                                name: 'import',
+                                                label: builder.Locale.get('Import'),
+                                                icon: 'download',
+                                                type: 'submit',
+                                            },
+                                        );
+                                    },
+                                );
+                            },
                         );
                     }
                 });
