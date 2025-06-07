@@ -32,9 +32,27 @@
                             case 404: color = 'warning'; icon = 'question-diamond'; break;
                             case 500: color = 'danger'; icon = 'bug'; break;
                         }
-                        builder.Component("alert",tab,{icon:icon,color:color,title:title},function(alert,component){component.content.html('<pre class="m-0 p-2">'+content+'</pre>');});
+                        builder.Component("alert","#layout",{icon:icon,color:color,title:title},function(alert,component){component.content.html('<pre class="m-0 p-2">'+content+'</pre>');});
                     },
                     success: function(response) {
+
+                        // Build a list of options
+                        var options = [
+                            {id: 'local', text: builder.Locale.get('Local Application Feed')},
+                        ];
+
+                        // Check if modules are available
+                        if(typeof response.modules !== 'undefined' && Object.entries(response.modules).length > 0){
+
+                            // Loop through the modules
+                            for(const [base, extension] of Object.entries(response.modules)){
+
+                                // Check if the extension has git enabled
+                                if(extension.git){
+                                    options.push({id: base, text: builder.Locale.get('Module') + ': ' + extension.name});
+                                }
+                            }
+                        }
 
                         // Loop through the types
                         for(const [type, extensions] of Object.entries(response)){
@@ -46,10 +64,83 @@
                                 function(tab, nav){
 
                                     // Generate the feed
-                                    ExtensionsFeed(tab, extensions);
+                                    ExtensionsFeed(tab, extensions, options);
                                 },
                             );
                         }
+
+                        // Add a tab for importation
+                        tabs.add(
+                            "import",
+                            {label: builder.Locale.get("Import")},
+                            function(tab, nav){
+
+                                // Form
+                                tab.form = builder.Component(
+                                    'form',
+                                    tab,
+                                    {
+                                        class:{
+                                            form: 'row g-3',
+                                            field: 'col-12',
+                                        },
+                                        callback:{
+                                            submit: function(form){
+
+                                                // AJAX Request
+                                                $.ajax({
+                                                    url: '/endpoint.php/extensions/import',
+                                                    headers: {'X-CSRF-Authorization': CSRF_KEY},
+                                                    type: 'POST',dataType: 'json',
+                                                    data: form.val(),
+                                                    success: function(response){
+
+                                                        // Update CSRF
+                                                        CSRF_KEY = response.CSRF.key;
+                                                        CSRF_TOKEN = response.CSRF.token;
+
+                                                        // Clear the form
+                                                        form.clear();
+                                                    }
+                                                });
+                                            },
+                                        },
+                                    },
+                                    function(form,component){
+
+                                        // URL
+                                        form.add(
+                                            {
+                                                name: 'url',
+                                                label: builder.Locale.get('URL'),
+                                                icon: 'git',
+                                                type: 'text',
+                                            },
+                                        );
+
+                                        // Token
+                                        form.add(
+                                            {
+                                                name: 'token',
+                                                label: builder.Locale.get('Token'),
+                                                icon: 'key',
+                                                type: 'text',
+                                            },
+                                        );
+
+                                        // Submit
+                                        form.add(
+                                            {
+                                                name: 'import',
+                                                label: builder.Locale.get('Import'),
+                                                icon: 'download',
+                                                type: 'submit',
+                                            },
+                                        );
+                                    },
+                                );
+                            },
+                        );
                     }
                 });
             },
