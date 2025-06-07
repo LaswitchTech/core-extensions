@@ -39,6 +39,7 @@ class ExtensionsEndpoint extends Endpoint {
             case "/extensions/publish":
             case "/extensions/unpublish":
             case "/extensions/update":
+            case "/extensions/import":
                 $this->Level = 3;
                 break;
             case "/extensions/uninstall":
@@ -50,7 +51,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Fetch all extensions
      */
-    public function fetchAllAction()
+    public function fetchAllAction(): array
     {
         // Set the default message
         $message = ["status" => 200, "message" => "OK", "data" => []];
@@ -73,7 +74,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Update the meta information
      */
-    public function metaAction()
+    public function metaAction(): array
     {
         // Import Global Variables
         global $CSRF;
@@ -167,7 +168,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Publish an extension
      */
-    public function publishAction()
+    public function publishAction(): array
     {
         // Import Global Variables
         global $CSRF;
@@ -331,7 +332,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Unpublish an extension
      */
-    public function unpublishAction()
+    public function unpublishAction(): array
     {
         // Set the default message
         $message = ["status" => 200, "message" => "OK", "data" => []];
@@ -457,7 +458,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Install an extension
      */
-    public function installAction()
+    public function installAction(): array
     {
         // Set the default message
         $message = ["status" => 200, "message" => "OK", "data" => []];
@@ -543,7 +544,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Uninstall an extension
      */
-    public function uninstallAction()
+    public function uninstallAction(): array
     {
         // Set the default message
         $message = ["status" => 200, "message" => "OK", "data" => []];
@@ -610,7 +611,7 @@ class ExtensionsEndpoint extends Endpoint {
     /**
      * Update an extension
      */
-    public function updateAction()
+    public function updateAction(): array
     {
         // Set the default message
         $message = ["status" => 200, "message" => "OK", "data" => []];
@@ -686,6 +687,90 @@ class ExtensionsEndpoint extends Endpoint {
                     // Set the error message
                     $message = ["status" => 400, "message" => "Bad Request", "data" => "Type and base parameters are required."];
                 }
+            }
+        }
+
+        // Return the message
+        return $message;
+    }
+
+    /**
+     * Import an extension
+     */
+    public function importAction(): array
+    {
+        // Import Global Variables
+        global $CSRF;
+
+        // Set the default message
+        $message = ["status" => 200, "message" => "OK", "data" => []];
+
+        // Check the request method
+        if($this->Request->getMethod() == "POST"){
+            $message["data"]["CSRF"] = [
+                "token" => $CSRF->token(),
+                "key" => $CSRF->key()
+            ];
+        }
+
+        // Check if the status is still OK
+        if($message['status'] == 200){
+
+            // Check the request method
+            if($this->Request->getMethod() == "POST"){
+
+                // Retrieve the url of extensions
+                $url = $this->Request->getParams('POST', 'url') ?? null;
+
+                // Retrieve the token of the extensions
+                $token = $this->Request->getParams('POST', 'token') ?? null;
+                $token = empty($token) ? null : $token;
+
+                // Check if the url is set
+                if($url){
+
+                    // Parse the repository URL
+                    $url = $this->Helper->Core->getRepo($url)['url'];
+
+                    // Check if the URL is valid
+                    if($url){
+
+                        // Load the extension info
+                        $extension = $this->Helper->Core->retrieve($url, $token ?? null);
+
+                        // Set the type and base
+                        $type = $extension['type'] ?? 'modules';
+                        $base = $extension['base'] ?? null;
+
+                        // Retrieve the application feed listing
+                        $feedListing = $this->Config->get('extensions');
+
+                        // Set the extension in the feed listing
+                        $feedListing[$type][$base] = ['url' => $url];
+
+                        // Check if the token is set
+                        if(array_key_exists('token', $extension) && $extension['token']){
+
+                            // Set the token in the feed listing
+                            $feedListing[$type][$base]['token'] = $extension['token'];
+                        }
+
+                        // Save the feed listing
+                        $message["data"]["status"] = $this->Config->set('extensions', $type, $feedListing[$type]);
+                    } else {
+
+                        // Set the error message
+                        $message = ["status" => 400, "message" => "Bad Request", "data" => "Invalid repository URL."];
+                    }
+                } else {
+
+                    // Set the error message
+                    $message = ["status" => 400, "message" => "Bad Request", "data" => "URL parameters is required."];
+                }
+            } else {
+
+                // Set the error message
+                $message = ["status" => 405, "message" => "Method Not Allowed", "data" => "This endpoint only accepts POST requests."];
             }
         }
 

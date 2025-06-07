@@ -87,31 +87,22 @@
                                         callback:{
                                             submit: function(form){
 
-                                                // // AJAX Request
-                                                // $.ajax({
-                                                //     url: '/endpoint.php/extensions/meta?type='+extension.type+'&base='+extension.base,
-                                                //     headers: {'X-CSRF-Authorization': CSRF_KEY},
-                                                //     type: 'POST',dataType: 'json',
-                                                //     data: {meta: form.val()},
-                                                //     success: function(response){
+                                                // AJAX Request
+                                                $.ajax({
+                                                    url: '/endpoint.php/extensions/import',
+                                                    headers: {'X-CSRF-Authorization': CSRF_KEY},
+                                                    type: 'POST',dataType: 'json',
+                                                    data: form.val(),
+                                                    success: function(response){
 
-                                                //         // Update CSRF
-                                                //         CSRF_KEY = response.CSRF.key;
-                                                //         CSRF_TOKEN = response.CSRF.token;
+                                                        // Update CSRF
+                                                        CSRF_KEY = response.CSRF.key;
+                                                        CSRF_TOKEN = response.CSRF.token;
 
-                                                //         // Loop through the tables
-                                                //         for(const [key, value] of Object.entries(form.val())){
-                                                //             switch(key){
-                                                //                 default:
-                                                //                     row.find('[data-key="'+key+'"]').text(value);
-                                                //                     break;
-                                                //             }
-                                                //         }
-
-                                                //         // Close the modal
-                                                //         modal.hide();
-                                                //     }
-                                                // });
+                                                        // Clear the form
+                                                        form.clear();
+                                                    }
+                                                });
                                             },
                                         },
                                     },
