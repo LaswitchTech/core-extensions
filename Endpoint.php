@@ -63,7 +63,24 @@ class ExtensionsEndpoint extends Endpoint {
             if($this->Request->getMethod() == "GET"){
 
                 // Get the extensions listing
-                $message['data'] = $this->Helper->Core->loadExtensionsMeta(true);
+                $extensions = $this->Helper->Core->loadExtensionsMeta(true);
+
+                // Sort the extensions by type
+                ksort($extensions);
+
+                // Loop through the extensions
+                foreach($extensions as $type => $list){
+
+                    // Sort the extensions by base
+                    ksort($list);
+
+                    // Loop through the extensions
+                    foreach($list as $base => $extension){
+
+                        // Set the extension in the message data
+                        $message['data'][$type][$base] = $extension;
+                    }
+                }
             }
         }
 
