@@ -1,10 +1,3 @@
-//
-//   Core Framework - Script file
-//
-//   @license    MIT (https://mit-license.org/)
-//   @author     Louis Ouellet <louis@laswitchtech.com>
-//
-
 const ExtensionsModalDev = function(extension, row){
     builder.Component(
         "modal",
@@ -73,15 +66,11 @@ const ExtensionsModalDev = function(extension, row){
 
                             // AJAX Request
                             $.ajax({
-                                url: '/endpoint.php/extensions/meta?type='+extension.type+'&base='+extension.base,
+                                url: '/api/extensions/meta?type='+extension.type+'&base='+extension.base,
                                 headers: {'X-CSRF-Authorization': CSRF_KEY},
                                 type: 'POST',dataType: 'json',
                                 data: {meta: form.val()},
                                 success: function(response){
-
-                                    // Update CSRF
-                                    CSRF_KEY = response.CSRF.key;
-                                    CSRF_TOKEN = response.CSRF.token;
 
                                     // Loop through the tables
                                     for(const [key, value] of Object.entries(form.val())){
@@ -209,15 +198,11 @@ const ExtensionsModalPublish = function(extension, options = []){
 
                             // AJAX Request
                             $.ajax({
-                                url: '/endpoint.php/extensions/publish?type='+extension.type+'&base='+extension.base,
+                                url: '/api/extensions/publish?type='+extension.type+'&base='+extension.base,
                                 headers: {'X-CSRF-Authorization': CSRF_KEY},
                                 type: 'POST',dataType: 'json',
                                 data: form.val(),
                                 success: function(response){
-
-                                    // Update CSRF
-                                    CSRF_KEY = response.CSRF.key;
-                                    CSRF_TOKEN = response.CSRF.token;
 
                                     // Close the modal
                                     modal.hide();
@@ -289,7 +274,7 @@ const ExtensionsModalUnpublish = function(extension){
 
                         // AJAX Request
                         $.ajax({
-                            url: '/endpoint.php/extensions/unpublish?type='+extension.type+'&base='+extension.base,
+                            url: '/api/extensions/unpublish?type='+extension.type+'&base='+extension.base,
                             type: 'GET',dataType: 'json',
                             success: function(response){
 
@@ -356,7 +341,7 @@ const ExtensionsModalInstall = function(extension){
 
                         // AJAX Request
                         $.ajax({
-                            url: '/endpoint.php/extensions/install?type='+extension.type+'&base='+extension.base,
+                            url: '/api/extensions/install?type='+extension.type+'&base='+extension.base,
                             type: 'GET',dataType: 'json',
                             success: function(response){
 
@@ -423,7 +408,7 @@ const ExtensionsModalUninstall = function(extension){
 
                         // AJAX Request
                         $.ajax({
-                            url: '/endpoint.php/extensions/uninstall?type='+extension.type+'&base='+extension.base,
+                            url: '/api/extensions/uninstall?type='+extension.type+'&base='+extension.base,
                             type: 'GET',dataType: 'json',
                             success: function(response){
 
@@ -490,7 +475,7 @@ const ExtensionsModalUpdate = function(extension){
 
                         // AJAX Request
                         $.ajax({
-                            url: '/endpoint.php/extensions/update?type='+extension.type+'&base='+extension.base,
+                            url: '/api/extensions/update?type='+extension.type+'&base='+extension.base,
                             type: 'GET',dataType: 'json',
                             success: function(response){
 
@@ -566,6 +551,18 @@ const ExtensionsFeed = function(container, extensions, options = []){
         }).appendTo(row.meta.header.author);
         row.meta.header.author.name = $(document.createElement('span')).attr('data-key','author').text(extension.author).appendTo(row.meta.header.author);
         row.meta.paragraph = $(document.createElement('p')).attr('data-key','description').text(extension.description).appendTo(row.meta);
+        row.meta.tags = $(document.createElement('div')).addClass('mb-2').appendTo(row.meta);
+
+        // Tags
+        if(typeof extension.tags !== 'undefined' && extension.tags !== null && extension.tags.split(',').length > 0){
+            for(const tag of extension.tags.split(',')){
+                row.meta.tags.tag = $(document.createElement('span')).addClass('badge text-bg-secondary me-1').attr('data-key','tags').text(tag).appendTo(row.meta.tags);
+                row.meta.tags.tag.icon = $(document.createElement('i')).addClass('bi bi-tag-fill me-1').prependTo(row.meta.tags.tag);
+            }
+        } else {
+            row.meta.tags.tag = $(document.createElement('span')).addClass('badge text-bg-secondary me-1').attr('data-key','tags').text(builder.Locale.get('No Tags')).appendTo(row.meta.tags);
+            row.meta.tags.tag.icon = $(document.createElement('i')).addClass('bi bi-tag-fill me-1').prependTo(row.meta.tags.tag);
+        }
 
         // Links
         row.meta.links = $(document.createElement('div')).addClass('d-flex flex-row').appendTo(row.meta);

@@ -1,9 +1,3 @@
-<!--
-  Core Framework - View File
-
-  @license    MIT (https://mit-license.org/)
-  @author     Full Name <user@domain.com>
--->
 <div class="col-12" id="layout"></div>
 <script>
     $(document).ready(function(){
@@ -23,7 +17,7 @@
 
                 // AJAX Request
                 $.ajax({
-                    url: '/endpoint.php/extensions/fetchAll',
+                    url: '/api/extensions/fetchAll',
                     type: 'GET',dataType: 'json',
                     error: function(xhr, status, error) {
                         let color = 'info', icon = 'question-circle', title = builder.Locale.get(xhr.statusText), content = builder.Locale.get(xhr.responseText);
@@ -89,15 +83,11 @@
 
                                                 // AJAX Request
                                                 $.ajax({
-                                                    url: '/endpoint.php/extensions/import',
+                                                    url: '/api/extensions/import',
                                                     headers: {'X-CSRF-Authorization': CSRF_KEY},
                                                     type: 'POST',dataType: 'json',
                                                     data: form.val(),
                                                     success: function(response){
-
-                                                        // Update CSRF
-                                                        CSRF_KEY = response.CSRF.key;
-                                                        CSRF_TOKEN = response.CSRF.token;
 
                                                         // Clear the form
                                                         form.clear();
