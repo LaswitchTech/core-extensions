@@ -26,6 +26,7 @@ class ExtensionsEndpoint extends Endpoint {
                 $this->Level = 1;
                 break;
             case "/extensions/install":
+                $this->Public = !$this->Config->get('application', 'installed');
                 $this->Level = 2;
                 break;
             case "/extensions/meta":
