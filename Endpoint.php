@@ -518,8 +518,16 @@ class ExtensionsEndpoint extends Endpoint {
                                         unlink($archivePath);
                                     }
 
-                                    // Set the status
-                                    $message["data"]["status"] = true;
+                                    // Import the extension's database schema
+                                    if($this->Model->Core->import($extension['path'] . DIRECTORY_SEPARATOR . "Install")){
+
+                                        // Set the status
+                                        $message["data"]["status"] = true;
+                                    } else {
+
+                                        // Set the error message
+                                        $message = ["status" => 400, "message" => "Bad Request", "data" => "Failed to create the extension's database."];
+                                    }
                                 } else {
 
                                     // Set the error message
@@ -671,8 +679,16 @@ class ExtensionsEndpoint extends Endpoint {
                                         unlink($archivePath);
                                     }
 
-                                    // Set the status
-                                    $message["data"]["status"] = true;
+                                    // Import the extension's database schema
+                                    if($this->Model->Core->import($extension['path'] . DIRECTORY_SEPARATOR . "Install", file_get_contents($extension['path'] . DIRECTORY_SEPARATOR . 'VERSION'))){
+
+                                        // Set the status
+                                        $message["data"]["status"] = true;
+                                    } else {
+
+                                        // Set the error message
+                                        $message = ["status" => 400, "message" => "Bad Request", "data" => "Failed to create the extension's database."];
+                                    }
                                 } else {
 
                                     // Set the error message
