@@ -46,7 +46,7 @@ const ExtensionsModalDev = function(extension, row){
             const componentModal = component;
 
             // Styling
-            component.header.addClass('text-bg-indigo');
+            component.addClass('modal-indigo');
             component.footer.submit.addClass('btn-indigo').removeClass('btn-link').attr({
                 "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
             }).text(builder.Locale.get('Save Metadata'));
@@ -177,7 +177,7 @@ const ExtensionsModalPublish = function(extension, options = []){
             const componentModal = component;
 
             // Styling
-            component.header.addClass('text-bg-blue');
+            component.addClass('modal-blue');
             component.footer.submit.addClass('btn-blue').removeClass('btn-link').attr({
                 "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
             }).text(builder.Locale.get('Publish Extension'));
@@ -292,7 +292,7 @@ const ExtensionsModalUnpublish = function(extension){
             const componentModal = component;
 
             // Styling
-            component.header.addClass('text-bg-danger');
+            component.addClass('modal-danger');
             component.footer.submit.addClass('btn-danger').removeClass('btn-link').attr({
                 "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
             }).text(builder.Locale.get('Unpublish Extension'));
@@ -359,7 +359,7 @@ const ExtensionsModalInstall = function(extension){
             const componentModal = component;
 
             // Styling
-            component.header.addClass('text-bg-success');
+            component.addClass('modal-success');
             component.footer.submit.addClass('btn-success').removeClass('btn-link').attr({
                 "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
             }).text(builder.Locale.get('Install Extension'));
@@ -426,7 +426,7 @@ const ExtensionsModalUninstall = function(extension){
             const componentModal = component;
 
             // Styling
-            component.header.addClass('text-bg-danger');
+            component.addClass('modal-danger');
             component.footer.submit.addClass('btn-danger').removeClass('btn-link').attr({
                 "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
             }).text(builder.Locale.get('Uninstall Extension'));
@@ -493,7 +493,7 @@ const ExtensionsModalUpdate = function(extension){
             const componentModal = component;
 
             // Styling
-            component.header.addClass('text-bg-warning');
+            component.addClass('modal-warning');
             component.footer.submit.addClass('btn-warning').removeClass('btn-link').attr({
                 "style": "border-bottom-right-radius: var(--bs-modal-inner-border-radius) !important;border-bottom-left-radius: var(--bs-modal-inner-border-radius) !important;",
             }).text(builder.Locale.get('Update Extension'));
