@@ -29,6 +29,7 @@
                         builder.Component("alert","#layout",{icon:icon,color:color,title:title},function(alert,component){component.content.html('<pre class="m-0 p-2">'+content+'</pre>');});
                     },
                     success: function(response) {
+                        console.log(response);
 
                         // Build a list of options
                         var options = [
@@ -51,16 +52,20 @@
                         // Loop through the types
                         for(const [type, extensions] of Object.entries(response)){
 
-                            // Add a tab for each type
-                            tabs.add(
-                                type,
-                                {label: builder.Locale.get(type.charAt(0).toUpperCase() + type.slice(1))},
-                                function(tab, nav){
+                            // Skip keys that are not types
+                            if(['modules','plugins','themes'].includes(type)){
 
-                                    // Generate the feed
-                                    ExtensionsFeed(tab, extensions, options);
-                                },
-                            );
+                                // Add a tab for each type
+                                tabs.add(
+                                    type,
+                                    {label: builder.Locale.get(type.charAt(0).toUpperCase() + type.slice(1))},
+                                    function(tab, nav){
+
+                                        // Generate the feed
+                                        ExtensionsFeed(tab, extensions, options);
+                                    },
+                                );
+                            };
                         }
 
                         // Add a tab for importation
