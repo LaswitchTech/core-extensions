@@ -541,7 +541,7 @@ class ExtensionsEndpoint extends Endpoint {
                         } else {
 
                             // Set the error message
-                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Extension is already installed."];
+                            $message = ["status" => 200, "message" => "OK", "data" => "Extension is already installed."];
                         }
                     } else {
 
