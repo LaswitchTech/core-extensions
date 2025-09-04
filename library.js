@@ -342,9 +342,14 @@ builder.add('widgets','extensions', class extends builder.ComponentClass {
             } else {
                 extension.controls.publish.remove();
                 extension.controls.unpublish.remove();
+                extension.controls.dev.remove();
             }
         } else {
             extension.controls.uninstall.remove();
+            extension.controls.publish.remove();
+            extension.controls.unpublish.remove();
+            extension.controls.dev.remove();
+            extension.controls.update.remove();
         }
 
         // Save the vCard in the contacts object
