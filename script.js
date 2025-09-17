@@ -65,25 +65,18 @@ const ExtensionsModalDev = function(extension, row){
                         submit: function(form){
 
                             // AJAX Request
-                            $.ajax({
-                                url: '/api/extensions/meta?type='+extension.type+'&base='+extension.base,
-                                headers: {'X-CSRF-Authorization': CSRF_KEY},
-                                type: 'POST',dataType: 'json',
-                                data: {meta: form.val()},
-                                success: function(response){
-
-                                    // Loop through the tables
-                                    for(const [key, value] of Object.entries(form.val())){
-                                        switch(key){
-                                            default:
-                                                row.find('[data-key="'+key+'"]').text(value);
-                                                break;
-                                        }
+                            API.endpoint('/extensions/meta?type='+extension.type+'&base='+extension.base).data({meta: form.val()}).execute(function(response){
+                                // Loop through the tables
+                                for(const [key, value] of Object.entries(form.val())){
+                                    switch(key){
+                                        default:
+                                            row.find('[data-key="'+key+'"]').text(value);
+                                            break;
                                     }
-
-                                    // Close the modal
-                                    modal.hide();
                                 }
+
+                                // Close the modal
+                                modal.hide();
                             });
                         },
                     },
@@ -197,16 +190,10 @@ const ExtensionsModalPublish = function(extension, options = []){
                             console.log(form.val());
 
                             // AJAX Request
-                            $.ajax({
-                                url: '/api/extensions/publish?type='+extension.type+'&base='+extension.base,
-                                headers: {'X-CSRF-Authorization': CSRF_KEY},
-                                type: 'POST',dataType: 'json',
-                                data: form.val(),
-                                success: function(response){
-
-                                    // Close the modal
-                                    modal.hide();
-                                }
+                            API.endpoint('/extensions/publish?type='+extension.type+'&base='+extension.base).data(form.val()).execute(function(){
+                                modal.hide();
+                            },function(){
+                                modal.hide();
                             });
                         },
                     },
@@ -273,14 +260,10 @@ const ExtensionsModalUnpublish = function(extension){
                         spinner.removeClass('d-none');
 
                         // AJAX Request
-                        $.ajax({
-                            url: '/api/extensions/unpublish?type='+extension.type+'&base='+extension.base,
-                            type: 'GET',dataType: 'json',
-                            success: function(response){
-
-                                // Close the modal
-                                modal.hide();
-                            }
+                        API.endpoint('/extensions/unpublish?type='+extension.type+'&base='+extension.base).execute(function(){
+                            modal.hide();
+                        },function(){
+                            modal.hide();
                         });
                     }, 300);
                 },
@@ -340,14 +323,10 @@ const ExtensionsModalInstall = function(extension){
                         spinner.removeClass('d-none');
 
                         // AJAX Request
-                        $.ajax({
-                            url: '/api/extensions/install?type='+extension.type+'&base='+extension.base,
-                            type: 'GET',dataType: 'json',
-                            success: function(response){
-
-                                // Close the modal
-                                modal.hide();
-                            }
+                        API.endpoint('/extensions/install?type='+extension.type+'&base='+extension.base).execute(function(){
+                            modal.hide();
+                        },function(){
+                            modal.hide();
                         });
                     }, 300);
                 },
@@ -407,14 +386,10 @@ const ExtensionsModalUninstall = function(extension){
                         spinner.removeClass('d-none');
 
                         // AJAX Request
-                        $.ajax({
-                            url: '/api/extensions/uninstall?type='+extension.type+'&base='+extension.base,
-                            type: 'GET',dataType: 'json',
-                            success: function(response){
-
-                                // Close the modal
-                                modal.hide();
-                            }
+                        API.endpoint('/extensions/uninstall?type='+extension.type+'&base='+extension.base).execute(function(){
+                            modal.hide();
+                        },function(){
+                            modal.hide();
                         });
                     }, 300);
                 },
@@ -474,14 +449,10 @@ const ExtensionsModalUpdate = function(extension){
                         spinner.removeClass('d-none');
 
                         // AJAX Request
-                        $.ajax({
-                            url: '/api/extensions/update?type='+extension.type+'&base='+extension.base,
-                            type: 'GET',dataType: 'json',
-                            success: function(response){
-
-                                // Close the modal
-                                modal.hide();
-                            }
+                        API.endpoint('/extensions/update?type='+extension.type+'&base='+extension.base).execute(function(){
+                            modal.hide();
+                        },function(){
+                            modal.hide();
                         });
                     }, 300);
                 },

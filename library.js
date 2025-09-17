@@ -75,45 +75,19 @@ builder.add('widgets','extensions', class extends builder.ComponentClass {
         });
 
         // AJAX Request
-        $.ajax({
-            url: '/api/extensions/fetchAll',
-            type: 'GET',dataType: 'json',
-            error: function(xhr, status, error) {
-                let color = 'info', icon = 'question-circle', title = self._builder.Locale.get(xhr.statusText), content = self._builder.Locale.get(xhr.responseText);
-                switch(xhr.status){
-                    case 403: color = 'danger'; icon = 'person'; break;
-                    case 404: color = 'warning'; icon = 'question-diamond'; break;
-                    case 500: color = 'danger'; icon = 'bug'; break;
-                }
-                self._builder.Component(
-                    "alert",
-                    self._component.container,
-                    {
-                        icon:icon,
-                        color:color,
-                        title:title
-                    },
-                    function(alert,component){
-                        component.content.html('<pre class="m-0 p-2">'+content+'</pre>');
-                    },
-                );
-            },
-            success: function(response) {
-                console.log(response);
+        API.endpoint('/extensions/fetchAll').execute(function(response){
+            // Loop through the types
+            for(const [type, extensions] of Object.entries(response)){
 
-                // Loop through the types
-                for(const [type, extensions] of Object.entries(response)){
+                // Skip keys that are not types
+                if(['modules','plugins','themes'].includes(type)){
 
-                    // Skip keys that are not types
-                    if(['modules','plugins','themes'].includes(type)){
-
-                        // Loop through the extensions
-                        for(const [name, extension] of Object.entries(extensions)){
-                            self.add(type, extension);
-                        }
+                    // Loop through the extensions
+                    for(const [name, extension] of Object.entries(extensions)){
+                        self.add(type, extension);
                     }
                 }
-            },
+            }
         });
     }
 
