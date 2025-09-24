@@ -174,7 +174,7 @@ builder.add('widgets','extensions', class extends builder.ComponentClass {
         extension.card.body.info = $(document.createElement('div')).addClass('d-flex align-items-center gap-3').appendTo(extension.card.body);
         extension.avatar = $(document.createElement('img')).attr({
             'class':'avatar rounded-circle border border-3',
-            'src': record.picture || '/plugins/extensions/placeholder.png',
+            'src': record.picture || '/assets/plugins/extensions/placeholder.png',
             'alt': (record.name ?? 'Unknown').substring(0,2).toUpperCase(),
         }).appendTo(extension.card.body.info);
         extension.card.body.info.container = $(document.createElement('div')).addClass('flex-grow-1').appendTo(extension.card.body.info);
