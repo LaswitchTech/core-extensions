@@ -671,28 +671,36 @@ class ExtensionsEndpoint extends Endpoint {
                             // Download the extension archive
                             if($this->Helper->Core->download($extension['download'], $archivePath, $extension['token'] ?? null)){
 
-                                // Unpack the archive to the extension path
-                                if($this->Helper->Core->unpack($archivePath, $extension['path'])){
+                                // Delete the existing extension path
+                                if($this->Helper->Core->delete($extension['path'])){
 
-                                    // Unset the archive file
-                                    if(file_exists($archivePath)){
-                                        unlink($archivePath);
-                                    }
+                                    // Unpack the archive to the extension path
+                                    if($this->Helper->Core->unpack($archivePath, $extension['path'])){
 
-                                    // Import the extension's database schema
-                                    if($this->Model->Core->import($extension['path'] . DIRECTORY_SEPARATOR . "Install", file_get_contents($extension['path'] . DIRECTORY_SEPARATOR . 'VERSION'))){
+                                        // Unset the archive file
+                                        if(file_exists($archivePath)){
+                                            unlink($archivePath);
+                                        }
 
-                                        // Set the status
-                                        $message["data"]["status"] = true;
+                                        // Import the extension's database schema
+                                        if($this->Model->Core->import($extension['path'] . DIRECTORY_SEPARATOR . "Install", file_get_contents($extension['path'] . DIRECTORY_SEPARATOR . 'VERSION'))){
+
+                                            // Set the status
+                                            $message["data"]["status"] = true;
+                                        } else {
+
+                                            // Set the error message
+                                            $message = ["status" => 400, "message" => "Bad Request", "data" => "Failed to create the extension's database."];
+                                        }
                                     } else {
 
                                         // Set the error message
-                                        $message = ["status" => 400, "message" => "Bad Request", "data" => "Failed to create the extension's database."];
+                                        $message = ["status" => 400, "message" => "Bad Request", "data" => "Could not unpack the extension archive."];
                                     }
                                 } else {
 
                                     // Set the error message
-                                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Could not unpack the extension archive."];
+                                    $message = ["status" => 400, "message" => "Bad Request", "data" => "Could not remove the existing extension."];
                                 }
                             } else {
 
